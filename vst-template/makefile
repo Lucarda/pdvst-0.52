@@ -38,6 +38,7 @@ ALL: $(SOURCES)
 	cp pdvst-template.dll ../build/Release$(arch)/Pd_Gain-gui.dll
 	cp pdvst-template.dll ../build/Release$(arch)/Pd_Gain-nogui.dll
 	cp pdvst-template.dll ../build/Release$(arch)/Pd_Midi.dll
+	cp pdvst-template.dll ../build/Release$(arch)/Pd_Chunks-test.dll
 
 	
 	
