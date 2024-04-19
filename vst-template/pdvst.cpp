@@ -226,6 +226,7 @@ pdvst::pdvst(audioMasterCallback audioMaster)
      //  {JYG   see pdvst::setProgram below for explanation
     timeFromStartup=GetTickCount();
     //  JYG  }
+    programsAreChunks(true);
 }
 
 pdvst::~pdvst()
@@ -598,6 +599,20 @@ bool pdvst::getOutputProperties(VstInt32 index, VstPinProperties* properties)
 		return true;
 	}
 	return false;
+}
+
+VstInt32 pdvst::getChunk (void** data, bool isPreset)
+{
+    MessageBox(0,"getchunk","debug",MB_OK);
+    strcpy ((char *)*data, "hello world");
+    return 11;
+}
+
+VstInt32 pdvst::setChunk (void* data, VstInt32 byteSize, bool isPreset)
+{	
+	MessageBox(0,"setchunk","debug",MB_OK);
+    debugLog("setchunk: %s", data);
+    return 1;
 }
 
 VstInt32 pdvst::canDo(char* text)

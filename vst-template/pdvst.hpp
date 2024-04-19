@@ -105,6 +105,9 @@ public:
  LPTSTR displayString;//= new TCHAR[MAXSTRINGSIZE];
 
    HWND pdGui;
+   
+    virtual VstInt32 getChunk (void** data, bool isPreset = false);
+    virtual VstInt32 setChunk (void* data, VstInt32 byteSize, bool isPreset = false);
 
 protected:
     static int referenceCount;
@@ -170,6 +173,7 @@ protected:
 
 
     // JYG  }
+    //void programsAreChunks (bool)       {}
 };
 
 #endif
