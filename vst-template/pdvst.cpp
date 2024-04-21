@@ -227,6 +227,7 @@ pdvst::pdvst(audioMasterCallback audioMaster)
     timeFromStartup=GetTickCount();
     //  JYG  }
     programsAreChunks(true);
+    sendPlugName(globalPluginName);
 }
 
 pdvst::~pdvst()
@@ -609,7 +610,16 @@ VstInt32 pdvst::getChunk (void** data, bool isPreset)
 }
 
 VstInt32 pdvst::setChunk (void* data, VstInt32 byteSize, bool isPreset)
-{	
+{
+
+    WaitForSingleObject(pdvstTransferMutex, 10);
+    {
+        pdvstData->datachunk.direction = PD_RECEIVE;
+        pdvstData->datachunk.type = STRING_TYPE;
+        strcpy(pdvstData->datachunk.value.stringData,(char *)data);
+        pdvstData->datachunk.updated = 1;
+        ReleaseMutex(pdvstTransferMutex);
+    }
 	MessageBox(0,"setchunk","debug",MB_OK);
     debugLog("setchunk: %s", data);
     return 1;

@@ -70,6 +70,8 @@ typedef struct _vstGuiNameReceiver
 
 t_vstGuiNameReceiver *vstGuiNameReceiver;
 
+
+
 t_vstParameterReceiver *vstParameterReceivers[MAXPARAMETERS];
 
 t_class *vstParameterReceiver_class;
@@ -195,6 +197,19 @@ int setPdvstPlugName(char* instanceName)
         return 0;
 }
 
+int setPdvstChunk(char* instanceName)
+{
+    t_symbol *tempSym;
+    tempSym = gensym("rvstdata");
+    if (tempSym->s_thing)
+    {
+        pd_symbol(tempSym->s_thing, gensym(instanceName));
+        return 1;
+    }
+    else
+        return 0;
+}
+
 
 int setPdvstFloatParameter(int index, float value)
 {
@@ -259,6 +274,8 @@ void makePdvstGuiNameReceiver()
         pd_bind(&vstGuiNameReceiver->x_obj.ob_pd, gensym("guiName"));
 
 }
+
+
 
 
 
@@ -389,6 +406,14 @@ int scheduler()
         {
              if (setPdvstPlugName((char*)pdvstData->plugName.value.stringData))
                 pdvstData->plugName.updated=0;
+        }
+        
+                // lucarda get data chunk from file
+        if (pdvstData->datachunk.direction == PD_RECEIVE && \
+            pdvstData->datachunk.updated)
+        {
+             if (setPdvstChunk((char*)pdvstData->datachunk.value.stringData))
+                pdvstData->datachunk.updated=0;
         }
 
         if (pdvstData->hostTimeInfo.updated)
