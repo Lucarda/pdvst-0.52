@@ -70,12 +70,20 @@ typedef struct _vstGuiNameReceiver
 
 t_vstGuiNameReceiver *vstGuiNameReceiver;
 
+typedef struct _vstChunkReceiver
+{
+    t_object x_obj;
+}t_vstChunkReceiver;
+
+t_vstChunkReceiver *vstChunkReceiver;
+
 
 
 t_vstParameterReceiver *vstParameterReceivers[MAXPARAMETERS];
 
 t_class *vstParameterReceiver_class;
 t_class *vstGuiNameReceiver_class;
+t_class *vstChunkReceiver_class;
 
 char *pdvstTransferMutexName,
      *pdvstTransferFileMapName,
@@ -242,6 +250,17 @@ void sendPdVstFloatParameter(t_vstParameterReceiver *x, t_float floatValue)
     ReleaseMutex(pdvstTransferMutex);
 }
 
+void sendPdVstChunk(t_vstChunkReceiver *x, t_symbol *sym)
+{
+
+    WaitForSingleObject(pdvstTransferMutex, INFINITE);
+    pdvstData->datachunk.type = STRING_TYPE;
+    pdvstData->datachunk.direction = PD_SEND;
+    pdvstData->datachunk.updated = 1;
+    strcpy(pdvstData->datachunk.value.stringData,sym->s_name);
+    ReleaseMutex(pdvstTransferMutex);
+}
+
 void sendPdVstGuiName(t_vstGuiNameReceiver *x, t_symbol *symbolValue)
 {
     WaitForSingleObject(pdvstTransferMutex, INFINITE);
@@ -266,12 +285,20 @@ void makePdvstParameterReceivers()
         vstParameterReceivers[i]->x_sym = gensym(string);
         pd_bind(&vstParameterReceivers[i]->x_obj.ob_pd, gensym(string));
     }
+
 }
 
 void makePdvstGuiNameReceiver()
 {
         vstGuiNameReceiver = (t_vstGuiNameReceiver *)pd_new(vstGuiNameReceiver_class);
         pd_bind(&vstGuiNameReceiver->x_obj.ob_pd, gensym("guiName"));
+
+}
+
+void makevstChunkReceiver()
+{
+        vstChunkReceiver = (t_vstChunkReceiver *)pd_new(vstChunkReceiver_class);
+        pd_bind(&vstChunkReceiver->x_obj.ob_pd, gensym("svstdata"));
 
 }
 
@@ -348,7 +375,20 @@ int scheduler()
 
     class_addfloat(vstParameterReceiver_class, (t_method)sendPdVstFloatParameter);
     makePdvstParameterReceivers();
+      
 
+    vstChunkReceiver_class = class_new(gensym("vstChunkReceiver"),
+                                           0,
+                                           0,
+                                           sizeof(t_vstChunkReceiver),
+                                           0,
+                                           0);
+
+    class_addsymbol(vstChunkReceiver_class,(t_method)sendPdVstChunk);
+    makevstChunkReceiver();
+    
+    
+    
     vstGuiNameReceiver_class = class_new(gensym("vstGuiNameReceiver"),
                                            0,
                                            0,

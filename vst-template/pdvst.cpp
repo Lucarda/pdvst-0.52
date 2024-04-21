@@ -605,8 +605,8 @@ bool pdvst::getOutputProperties(VstInt32 index, VstPinProperties* properties)
 VstInt32 pdvst::getChunk (void** data, bool isPreset)
 {
     MessageBox(0,"getchunk","debug",MB_OK);
-    strcpy ((char *)*data, "hello world");
-    return 11;
+    strcpy ((char *)*data, pdvstData->datachunk.value.stringData);
+    return strlen(pdvstData->datachunk.value.stringData);
 }
 
 VstInt32 pdvst::setChunk (void* data, VstInt32 byteSize, bool isPreset)
@@ -1113,6 +1113,17 @@ void pdvst::updatePdvstParameters()
 
 
 
+        }
+        
+        // to data chunk
+        
+        if (pdvstData->datachunk.direction == PD_SEND && \
+            pdvstData->datachunk.updated)
+        {
+            if (pdvstData->datachunk.type = STRING_TYPE)
+            {
+                pdvstData->datachunk.updated=0;
+            }
         }
 
         ReleaseMutex(pdvstTransferMutex);
