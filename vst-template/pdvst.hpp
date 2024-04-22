@@ -106,8 +106,8 @@ public:
 
    HWND pdGui;
    
-    virtual VstInt32 getChunk (void** data, bool isPreset = false);
-    virtual VstInt32 setChunk (void* data, VstInt32 byteSize, bool isPreset = false);
+    virtual VstInt32 getChunk (void** data, bool isPreset);
+    virtual VstInt32 setChunk (void* data, VstInt32 byteSize, bool isPreset);
 
 protected:
     static int referenceCount;

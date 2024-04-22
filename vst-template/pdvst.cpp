@@ -226,7 +226,7 @@ pdvst::pdvst(audioMasterCallback audioMaster)
      //  {JYG   see pdvst::setProgram below for explanation
     timeFromStartup=GetTickCount();
     //  JYG  }
-    programsAreChunks(true);
+    programsAreChunks(false);
     sendPlugName(globalPluginName);
 }
 
@@ -604,17 +604,24 @@ bool pdvst::getOutputProperties(VstInt32 index, VstPinProperties* properties)
 
 VstInt32 pdvst::getChunk (void** data, bool isPreset)
 {
-    strcpy ((char *)*data, pdvstData->datachunk.value.stringData);
+    //MessageBox(NULL,"debug","getchunk",MB_OK);
+    WaitForSingleObject(pdvstTransferMutex, 10);
+    {
+        if(*data) 
+        strcpy ((char *)*data, pdvstData->datachunk.value.stringData);
+        ReleaseMutex(pdvstTransferMutex);
+    }
     return strlen(pdvstData->datachunk.value.stringData);
 }
 
 VstInt32 pdvst::setChunk (void* data, VstInt32 byteSize, bool isPreset)
-{
-    memset(&pdvstData->datachunk.value.stringData, '\0', MAXSTRINGSIZE);
+{    
+    MessageBox(NULL,"debug","setchunk",MB_OK);
     WaitForSingleObject(pdvstTransferMutex, 10);
     {
         pdvstData->datachunk.direction = PD_RECEIVE;
         pdvstData->datachunk.type = STRING_TYPE;
+        memset(&pdvstData->datachunk.value.stringData, '\0', MAXSTRINGSIZE);
         strncpy(pdvstData->datachunk.value.stringData,(char *)data, (size_t)byteSize);
         pdvstData->datachunk.updated = 1;
         ReleaseMutex(pdvstTransferMutex);
