@@ -205,17 +205,53 @@ int setPdvstPlugName(char* instanceName)
         return 0;
 }
 
-int setPdvstChunk(char* instanceName)
+
+/*receive data chunk from host*/
+int setPdvstChunk(const char *amsg)
 {
     t_symbol *tempSym;
     tempSym = gensym("rvstdata");
+    
     if (tempSym->s_thing)
     {
-        pd_symbol(tempSym->s_thing, gensym(instanceName));
-        return 1;
-    }
+        size_t len = strlen(amsg);
+        t_binbuf* bbuf = binbuf_new();
+        binbuf_text(bbuf, amsg, len);
+    
+        int msg, natom = binbuf_getnatom(bbuf);
+        t_atom *at = binbuf_getvec(bbuf);
+  
+        for (msg = 0; msg < natom;) {
+            int emsg;
+            for (emsg = msg; emsg < natom && at[emsg].a_type != A_COMMA
+                && at[emsg].a_type != A_SEMI; emsg++);
+                if (emsg > msg) {
+                    int i;
+                    /* check for illegal atoms */
+                    for (i = msg; i < emsg; i++)
+                        if (at[i].a_type == A_DOLLAR || at[i].a_type == A_DOLLSYM) {
+                        pd_error(NULL, "rvstdata: got dollar sign in message");
+                        goto nodice;
+                    }
+
+                if (at[msg].a_type == A_FLOAT) {
+                    if (emsg > msg + 1)
+                    pd_list(tempSym->s_thing, 0, emsg-msg, at + msg);
+                    else pd_float(tempSym->s_thing, at[msg].a_w.w_float);
+                }
+                else if (at[msg].a_type == A_SYMBOL) {
+                pd_anything(tempSym->s_thing, at[msg].a_w.w_symbol, emsg-msg-1, at + msg + 1);
+                }
+            }
+            nodice:
+            msg = emsg + 1;
+        }
+  
+        binbuf_free(bbuf);
+        return 1;    
+    }    
     else
-        return 0;
+    return 0;
 }
 
 
@@ -250,15 +286,31 @@ void sendPdVstFloatParameter(t_vstParameterReceiver *x, t_float floatValue)
     ReleaseMutex(pdvstTransferMutex);
 }
 
-void sendPdVstChunk(t_vstChunkReceiver *x, t_symbol *sym)
+/*send data chunk to host*/
+void sendPdVstChunk(t_vstChunkReceiver *x, t_symbol *s, int argc, t_atom *argv)
 {
-
+    char *buf;
+    int length;
+    t_atom at;
+    t_binbuf*bbuf = binbuf_new();
+    
+    memset(&pdvstData->datachunk.value.stringData, '\0', MAXSTRINGSIZE);  
+  
+    SETSYMBOL(&at, s);
+    binbuf_add(bbuf, 1, &at);
+    binbuf_add(bbuf, argc, argv);
+    binbuf_gettext(bbuf, &buf, &length);
+    binbuf_free(bbuf);
+  
     WaitForSingleObject(pdvstTransferMutex, INFINITE);
     pdvstData->datachunk.type = STRING_TYPE;
     pdvstData->datachunk.direction = PD_SEND;
     pdvstData->datachunk.updated = 1;
-    strcpy(pdvstData->datachunk.value.stringData,sym->s_name);
+    strcpy(pdvstData->datachunk.value.stringData,buf);
+    //memcpy(pdvstData->datachunk.value.stringData, buf, length);
     ReleaseMutex(pdvstTransferMutex);
+    
+    freebytes(buf, length+1);
 }
 
 void sendPdVstGuiName(t_vstGuiNameReceiver *x, t_symbol *symbolValue)
@@ -268,9 +320,7 @@ void sendPdVstGuiName(t_vstGuiNameReceiver *x, t_symbol *symbolValue)
     pdvstData->guiName.direction = PD_SEND;
     pdvstData->guiName.updated = 1;
     strcpy(pdvstData->guiName.value.stringData,symbolValue->s_name);
-
     ReleaseMutex(pdvstTransferMutex);
-
 }
 
 void makePdvstParameterReceivers()
@@ -292,19 +342,13 @@ void makePdvstGuiNameReceiver()
 {
         vstGuiNameReceiver = (t_vstGuiNameReceiver *)pd_new(vstGuiNameReceiver_class);
         pd_bind(&vstGuiNameReceiver->x_obj.ob_pd, gensym("guiName"));
-
 }
 
 void makevstChunkReceiver()
 {
         vstChunkReceiver = (t_vstChunkReceiver *)pd_new(vstChunkReceiver_class);
         pd_bind(&vstChunkReceiver->x_obj.ob_pd, gensym("svstdata"));
-
 }
-
-
-
-
 
 void send_dacs(void)
 {
@@ -384,7 +428,7 @@ int scheduler()
                                            0,
                                            0);
 
-    class_addsymbol(vstChunkReceiver_class,(t_method)sendPdVstChunk);
+    class_addanything(vstChunkReceiver_class,(t_method)sendPdVstChunk);
     makevstChunkReceiver();
     
     

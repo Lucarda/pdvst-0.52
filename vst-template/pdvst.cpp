@@ -604,24 +604,21 @@ bool pdvst::getOutputProperties(VstInt32 index, VstPinProperties* properties)
 
 VstInt32 pdvst::getChunk (void** data, bool isPreset)
 {
-    MessageBox(0,"getchunk","debug",MB_OK);
     strcpy ((char *)*data, pdvstData->datachunk.value.stringData);
     return strlen(pdvstData->datachunk.value.stringData);
 }
 
 VstInt32 pdvst::setChunk (void* data, VstInt32 byteSize, bool isPreset)
 {
-
+    memset(&pdvstData->datachunk.value.stringData, '\0', MAXSTRINGSIZE);
     WaitForSingleObject(pdvstTransferMutex, 10);
     {
         pdvstData->datachunk.direction = PD_RECEIVE;
         pdvstData->datachunk.type = STRING_TYPE;
-        strcpy(pdvstData->datachunk.value.stringData,(char *)data);
+        strncpy(pdvstData->datachunk.value.stringData,(char *)data, (size_t)byteSize);
         pdvstData->datachunk.updated = 1;
         ReleaseMutex(pdvstTransferMutex);
     }
-	MessageBox(0,"setchunk","debug",MB_OK);
-    debugLog("setchunk: %s", data);
     return 1;
 }
 
