@@ -292,9 +292,7 @@ void sendPdVstChunk(t_vstChunkReceiver *x, t_symbol *s, int argc, t_atom *argv)
     char *buf;
     int length;
     t_atom at;
-    t_binbuf*bbuf = binbuf_new();
-    
-    memset(&pdvstData->datachunk.value.stringData, '\0', MAXSTRINGSIZE);  
+    t_binbuf*bbuf = binbuf_new();  
   
     SETSYMBOL(&at, s);
     binbuf_add(bbuf, 1, &at);
@@ -303,11 +301,12 @@ void sendPdVstChunk(t_vstChunkReceiver *x, t_symbol *s, int argc, t_atom *argv)
     binbuf_free(bbuf);
   
     WaitForSingleObject(pdvstTransferMutex, INFINITE);
+    memset(&pdvstData->datachunk.value.stringData, '\0', MAXSTRINGSIZE);
     pdvstData->datachunk.type = STRING_TYPE;
     pdvstData->datachunk.direction = PD_SEND;
     pdvstData->datachunk.updated = 1;
-    strcpy(pdvstData->datachunk.value.stringData,buf);
-    //memcpy(pdvstData->datachunk.value.stringData, buf, length);
+    //strcpy(pdvstData->datachunk.value.stringData,buf);
+    memcpy(pdvstData->datachunk.value.stringData, buf, length);
     ReleaseMutex(pdvstTransferMutex);
     
     freebytes(buf, length+1);
@@ -492,7 +491,7 @@ int scheduler()
                 pdvstData->plugName.updated=0;
         }
         
-                // lucarda get data chunk from file
+        // get data chunk from file
         if (pdvstData->datachunk.direction == PD_RECEIVE && \
             pdvstData->datachunk.updated)
         {

@@ -56,6 +56,7 @@ extern char globalHostPdvstPath[MAXFILENAMELEN];
 extern bool globalCustomGui;
 extern int globalCustomGuiWidth;
 extern int globalCustomGuiHeight;
+extern bool globalProgramsAreChunks;
 
 extern bool globalIsASynth;
 extern pdvstProgram globalProgram[MAXPROGRAMS];
@@ -226,7 +227,7 @@ pdvst::pdvst(audioMasterCallback audioMaster)
      //  {JYG   see pdvst::setProgram below for explanation
     timeFromStartup=GetTickCount();
     //  JYG  }
-    programsAreChunks(false);
+    programsAreChunks(globalProgramsAreChunks);
     sendPlugName(globalPluginName);
 }
 
@@ -604,29 +605,42 @@ bool pdvst::getOutputProperties(VstInt32 index, VstPinProperties* properties)
 
 VstInt32 pdvst::getChunk (void** data, bool isPreset)
 {
-    //MessageBox(NULL,"debug","getchunk",MB_OK);
-    WaitForSingleObject(pdvstTransferMutex, 10);
+    VstInt32 len;
+    //MessageBoxA(NULL, "getchunk call", "debug", MB_OK); // all host gets here
+    if(*data)
     {
-        if(*data) 
-        strcpy ((char *)*data, pdvstData->datachunk.value.stringData);
-        ReleaseMutex(pdvstTransferMutex);
+        //MessageBoxA(NULL, "getchunk if data", "debug", MB_OK); // not all hosts gets here
+        WaitForSingleObject(pdvstTransferMutex, 10);
+        {
+            //strcpy ((char *)*data, pdvstData->datachunk.value.stringData);
+            *data = pdvstData->datachunk.value.stringData;
+            len = (VstInt32)strlen(pdvstData->datachunk.value.stringData);
+            //memcpy(*data, pdvstData->datachunk.value.stringData, (size_t)len+1);
+            ReleaseMutex(pdvstTransferMutex);
+        }
+        return len+1;
     }
-    return strlen(pdvstData->datachunk.value.stringData);
+    else
+    return 0;
 }
 
 VstInt32 pdvst::setChunk (void* data, VstInt32 byteSize, bool isPreset)
 {    
-    MessageBox(NULL,"debug","setchunk",MB_OK);
-    WaitForSingleObject(pdvstTransferMutex, 10);
+    //MessageBoxA(NULL, "setchunk call", "debug", MB_OK);
+    if(byteSize)
     {
-        pdvstData->datachunk.direction = PD_RECEIVE;
-        pdvstData->datachunk.type = STRING_TYPE;
-        memset(&pdvstData->datachunk.value.stringData, '\0', MAXSTRINGSIZE);
-        strncpy(pdvstData->datachunk.value.stringData,(char *)data, (size_t)byteSize);
-        pdvstData->datachunk.updated = 1;
-        ReleaseMutex(pdvstTransferMutex);
+        //MessageBoxA(NULL, "setchunk call if bytesize", "debug", MB_OK);
+        WaitForSingleObject(pdvstTransferMutex, 10);
+        {
+            pdvstData->datachunk.direction = PD_RECEIVE;
+            pdvstData->datachunk.type = STRING_TYPE;
+            memset(&pdvstData->datachunk.value.stringData, '\0', MAXSTRINGSIZE);
+            strncpy(pdvstData->datachunk.value.stringData,(char *)data, (size_t)byteSize);
+            pdvstData->datachunk.updated = 1;
+            ReleaseMutex(pdvstTransferMutex);
+        }
     }
-    return 1;
+    return 0;
 }
 
 VstInt32 pdvst::canDo(char* text)
@@ -1124,7 +1138,7 @@ void pdvst::updatePdvstParameters()
         if (pdvstData->datachunk.direction == PD_SEND && \
             pdvstData->datachunk.updated)
         {
-            if (pdvstData->datachunk.type = STRING_TYPE)
+            if (pdvstData->datachunk.type == STRING_TYPE)
             {
                 pdvstData->datachunk.updated=0;
             }

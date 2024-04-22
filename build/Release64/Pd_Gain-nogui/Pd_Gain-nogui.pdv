@@ -23,7 +23,7 @@ DEBUG = FALSE
 
 # External libraries (comma delimited list, relative to pdvst/)
 # ***OBSOLETE, use [declare] inside patch instead*** 
-#LIB = 
+#LIB =
 
 # Number of VST parameters (up to 128)
 PARAMETERS = 1

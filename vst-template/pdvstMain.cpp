@@ -44,6 +44,7 @@ bool globalCustomGui = false;
 int globalCustomGuiWidth= 320;
 int globalCustomGuiHeight= 150;
 pdvstProgram globalProgram[MAXPROGRAMS];
+bool globalProgramsAreChunks = false;
 
 char *trimWhitespace(char *str);
 void parseSetupFile();
@@ -375,6 +376,18 @@ void parseSetupFile()
                     if (paramNum < MAXPARAMS && paramNum >= 0)
                         globalProgram[progNum].paramValue[paramNum] = \
                                                              (float)atof(value);
+                }
+                // programsarechunks (save custom data in .fxp or .fxb file)
+				if (strcmp(param, "programsarechunks") == 0)
+                {
+                    if (strcmp(strlwr(value), "true") == 0)
+                    {
+                        globalProgramsAreChunks = true;
+                    }
+                    else if (strcmp(strlwr(value), "false") == 0)
+                    {
+                        globalProgramsAreChunks = false;
+                    }
                 }
             }
         }

@@ -173,7 +173,6 @@ protected:
 
 
     // JYG  }
-    //void programsAreChunks (bool)       {}
 };
 
 #endif

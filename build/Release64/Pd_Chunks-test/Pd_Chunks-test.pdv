@@ -25,6 +25,11 @@ DEBUG = TRUE
 # ***OBSOLETE, use [declare] inside patch instead*** 
 #LIB = 
 
+# Save and Get Pd lists in .fxp file via ([s svstdata] and [r rvstdata])
+# Some hosts don't work correctly with this.
+# If in doubt just use FALSE.
+PROGRAMSARECHUNKS = TRUE
+
 # Number of VST parameters (up to 128)
 PARAMETERS = 1
 
