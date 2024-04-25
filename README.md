@@ -104,7 +104,13 @@ For an example, see Pd_Gain.pdv.
 
     PARAMETER<integer> = <float>
     Defines the parameter values for the last declared program. <float> must be 
-    between 0 and 1 inclusive. 
+    between 0 and 1 inclusive.
+
+    PROGRAMSARECHUNKS = <TRUE/FALSE>
+    Save and Get Pd lists in .fxp file via ([s svstdata] and [r rvstdata])
+    Some hosts don't work correctly with this.
+    If in doubt just use FALSE.
+ 
 
 # Pd/VST audio/midi Communication
 
@@ -128,16 +134,18 @@ For purposes such as GUI interaction and VST automation, your patch may need to 
 further with the VST host. Special Pd send/receive symbols can be used in your Pd patch. 
 For an example, see the pd-gain.pd file.
 
-* rvstparameter<integer> : Use this symbol to receive parameter values from the VST host. Values will be floats between 0 and 1 inclusive. 
-* svstparameter<integer> : Use this symbol to send parameter values to the VST host. Values should be floats between 0 and 1 inclusive. 
-* rvstopengui : Use this symbol to receive notification that the patch's GUI should be opened or closed. The value will be either 1 or 0. 
-* rvstplugname : Use this symbol to receive plug & instance name from host
-* vstTimeInfo (play head information support) : 
+* `rvstparameter<integer>` : Use this symbol to receive parameter values from the VST host. Values will be floats between 0 and 1 inclusive. 
+* `svstparameter<integer>` : Use this symbol to send parameter values to the VST host. Values should be floats between 0 and 1 inclusive. 
+* `rvstopengui` : Use this symbol to receive notification that the patch's GUI should be opened or closed. The value will be either 1 or 0.
+* `rvstprognumber`: Use this symbol to receive program number changes from host.
+* `rvstprogname`: Use this symbol to receive program name changes from host.
+* `rvstplugname`: Use this symbol to receive plug & instance name from host
+* `vstTimeInfo`: (play head information support) : 
 
-vstTimeInfo.ppqPos, vstTimeInfo.tempo, vstTimeInfo.timeSigNumerator, vstTimeInfo.timeSigDenominator, vstTimeInfo.flags are experimental receivers for getting time infos from host. Names should change in the future.
+`vstTimeInfo.ppqPos`, `vstTimeInfo.tempo`, `vstTimeInfo.timeSigNumerator`, `vstTimeInfo.timeSigDenominator`, `vstTimeInfo.flags` are experimental receivers for getting time infos from host. Names should change in the future.
 
 * EXPERIMENTAL
-  guiName : use this symbol to send and signal to the host the name of the gui-extra window to embed (see Pd_Gain(gui) example).
+  `guiName` : use this symbol to send and signal to the host the name of the gui-extra window to embed (see Pd_Gain(gui) example).
   
 Note: for most VST hosts, parameters for VST instruments are recorded as sysex data, so be 
 sure to disable any MIDI message filtering in the VST host. 
