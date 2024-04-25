@@ -99,8 +99,9 @@ public:
    // virtual VstInt32 canMono ();
     virtual void suspend();
     virtual void resume();
-        void sendGuiAction(int action);
-        void sendPlugName(char * name );  // JYG : to send plug name to puredatapatch
+    void sendGuiAction(int action);
+    void sendPlugName(char * name );  // JYG : to send plug name to puredatapatch
+    void sendProgChange(VstInt32 prgm); // send vst prog name and number to patch
 
  LPTSTR displayString;//= new TCHAR[MAXSTRINGSIZE];
 

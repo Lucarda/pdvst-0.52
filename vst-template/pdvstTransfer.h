@@ -121,7 +121,9 @@ typedef struct _pdvstTransferData
     pdvstMidiMessage midiQueue[MAXMIDIQUEUESIZE];
 	pdvstParameter guiState;
 	pdvstParameter plugName;  // transmitted by host
-    pdvstParameter datachunk;  // get/set chunk from .fxp file
+    pdvstParameter datachunk;  // get/set chunk from .fxp .fxb files
+    pdvstParameter progname2pd;  // send program name to Pd
+    pdvstParameter prognumber2pd;  // send program name to Pd
 	pdvstParameter guiName;   // transmitted by pd : name of gui window to be embedded
  //   #ifdef VSTMIDIOUTENABLE
     int midiOutQueueSize;

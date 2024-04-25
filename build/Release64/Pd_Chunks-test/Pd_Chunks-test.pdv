@@ -51,4 +51,7 @@ PARAMETER0 = 0.0
 #another program
 PROGRAM = -6dB
 
-PARAMETER0 = 0.94
+PARAMETER0 = 0.5
+
+#another program
+PROGRAM = test empty param

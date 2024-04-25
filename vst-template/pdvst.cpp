@@ -493,6 +493,25 @@ void pdvst::resume()
     }
 }
 
+void pdvst::sendProgChange(VstInt32 prgm)
+{
+
+    WaitForSingleObject(pdvstTransferMutex, 10);
+    {
+        pdvstData->prognumber2pd.direction = PD_RECEIVE;
+        pdvstData->prognumber2pd.type = FLOAT_TYPE;
+        pdvstData->prognumber2pd.value.floatData = (float)prgm;
+        pdvstData->prognumber2pd.updated = 1;
+
+        pdvstData->progname2pd.direction = PD_RECEIVE;
+        pdvstData->progname2pd.type = STRING_TYPE;
+        strcpy(pdvstData->progname2pd.value.stringData, program[prgm].name);
+        pdvstData->progname2pd.updated = 1;
+
+        ReleaseMutex(pdvstTransferMutex);
+    }
+}
+
 void pdvst::setProgram(VstInt32 prgmNum)
 {
    debugLog("appel de setProgram %d", prgmNum);
@@ -500,6 +519,7 @@ void pdvst::setProgram(VstInt32 prgmNum)
     if (prgmNum >= 0 && prgmNum < nPrograms)
         {
             curProgram = prgmNum;
+            sendProgChange(prgmNum);
 
 
    // {JYG    to prevent host call of setProgram to override current param settings
@@ -625,7 +645,7 @@ VstInt32 pdvst::getChunk (void** data, bool isPreset)
 }
 
 VstInt32 pdvst::setChunk (void* data, VstInt32 byteSize, bool isPreset)
-{    
+{
     //MessageBoxA(NULL, "setchunk call", "debug", MB_OK);
     if(byteSize)
     {
@@ -1132,9 +1152,9 @@ void pdvst::updatePdvstParameters()
 
 
         }
-        
+
         // to data chunk
-        
+
         if (pdvstData->datachunk.direction == PD_SEND && \
             pdvstData->datachunk.updated)
         {

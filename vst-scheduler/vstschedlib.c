@@ -205,7 +205,6 @@ int setPdvstPlugName(char* instanceName)
         return 0;
 }
 
-
 /*receive data chunk from host*/
 int setPdvstChunk(const char *amsg)
 {
@@ -491,7 +490,7 @@ int scheduler()
                 pdvstData->plugName.updated=0;
         }
         
-        // get data chunk from file
+        // check for data chunk from file
         if (pdvstData->datachunk.direction == PD_RECEIVE && \
             pdvstData->datachunk.updated)
         {
@@ -499,6 +498,29 @@ int scheduler()
                 pdvstData->datachunk.updated=0;
         }
 
+        // check for vst program name changed 
+        if (pdvstData->prognumber2pd.direction == PD_RECEIVE && \
+            pdvstData->prognumber2pd.updated)
+        {
+            t_symbol *tempSym;
+            tempSym = gensym("rvstprognumber");
+            if (tempSym->s_thing)
+                pd_float(tempSym->s_thing, (t_float)pdvstData->prognumber2pd.value.floatData);
+            pdvstData->prognumber2pd.updated=0;
+        }
+        
+        // check for vst program number changed
+        if (pdvstData->progname2pd.direction == PD_RECEIVE && \
+            pdvstData->progname2pd.updated)
+        {
+            t_symbol *tempSym;
+            tempSym = gensym("rvstprogname");
+            if (tempSym->s_thing)
+                pd_symbol(tempSym->s_thing, \
+                    gensym(pdvstData->progname2pd.value.stringData));
+            pdvstData->progname2pd.updated=0;
+        }
+        
         if (pdvstData->hostTimeInfo.updated)
         {
             pdvstData->hostTimeInfo.updated=0;
