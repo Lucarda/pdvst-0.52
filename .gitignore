@@ -11,3 +11,4 @@ vstsdk2.4
 # files
 
 build/Release64/pdvstdebug.txt
+build/Release32/pdvstdebug.txt
