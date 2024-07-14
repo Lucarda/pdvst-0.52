@@ -8,8 +8,8 @@ or higher.
 # How does it work ?
 
 PdVst consists of two main parts : 
-* a vst-plugin (pdvst-template32.dll, pdvst-template64.dll) to place in your favorite vst folder.
-* a custom external scheduler (vstschedlib.dll) to copy in the pure-data /bin folder
+* a vst-plugin (`pdvst-template.dll`) to place in your favorite vst folder.
+* a custom external scheduler (`vstschedlib.dll`) to copy in the pure-data /bin folder
 
 When a PdVst plugin is opened by the host application, a setup file (*.pdv) is read to determine
 information about the plugin, such as the Pd patch file to use, the number of parameters, etc...  
@@ -20,7 +20,7 @@ An instance of Pd.exe is started and opens the Pd patch file whose name was foun
 This new version doesn't need a custom version of pure-data. You can use your current pure-data
 installation (>= Pd-0.52) with your favorite externals). 
 
-1) According to your pd version (32 or 64 bits), go to the folder pd-scheduler32 or pd-scheduler64.
+1) According to your pd version (32 or 64 bits), go to the folder `Release32` or `Release64`.
 Copy `vstschedlib.dll` to `\bin` directory of your current pure-data installation
      
 2) Copy your plugin `.dll` file (e.g. `Pd_Gain.dll`) to the vst plugins directory
@@ -49,9 +49,9 @@ Copy `vstschedlib.dll` to `\bin` directory of your current pure-data installatio
    files (`.pd` files, external Pd library `.dll` files, etc.) as specified above (section
    "Installation").
 
-* Make a copy of the `pdvst-template32.dll` / `pdvst-template64.dll` file and
+* Make a copy of the `pdvst-template.dll` file and
    rename the same as the plugin and `.pdv` file (e.g. for a plugin named
-   Pd_Gain you would copy `pdvst-template32.dll` to a new file named `Pd_Gain.dll`).
+   Pd_Gain you would copy `pdvst-template.dll` to a new file named `Pd_Gain.dll`).
    Move your new plugin `.dll` file to the vst plugins folder of the application.
    
 # The .pdv Setup File-
