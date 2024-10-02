@@ -625,20 +625,30 @@ bool pdvst::getOutputProperties(VstInt32 index, VstPinProperties* properties)
 
 VstInt32 pdvst::getChunk (void** data, bool isPreset)
 {
-    VstInt32 len;
-    //MessageBoxA(NULL, "getchunk call", "debug", MB_OK); // all host gets here
-    if(*data)
+
+    Chunk = new pdvstProgramAreChunks;
+    
+    MessageBoxA(NULL, "getchunk call", "debug", MB_OK); // all host gets here
+  
+    
+    for (int i = 0; i < nParameters; i++)
+    {
+        Chunk->vstParam[i] = vstParam[i];
+    }
+    
+    if(1)
     {
         //MessageBoxA(NULL, "getchunk if data", "debug", MB_OK); // not all hosts gets here
         WaitForSingleObject(pdvstTransferMutex, 10);
         {
-            //strcpy ((char *)*data, pdvstData->datachunk.value.stringData);
-            *data = pdvstData->datachunk.value.stringData;
-            len = (VstInt32)strlen(pdvstData->datachunk.value.stringData);
-            //memcpy(*data, pdvstData->datachunk.value.stringData, (size_t)len+1);
+            memset(&Chunk->Data, '\0', MAXSTRLEN);
+            strcpy (Chunk->Data, pdvstData->datachunk.value.stringData);
             ReleaseMutex(pdvstTransferMutex);
-        }
-        return len+1;
+        }        
+        
+        debugLog("luc:debug-size-of-chunk %d", sizeof(*Chunk));
+        *data = (void*)Chunk;        
+        return sizeof(*Chunk);
     }
     else
     return 0;
@@ -648,18 +658,31 @@ VstInt32 pdvst::setChunk (void* data, VstInt32 byteSize, bool isPreset)
 {
     //MessageBoxA(NULL, "setchunk call", "debug", MB_OK);
     if(byteSize)
-    {
+    {        
+        Chunk = (pdvstProgramAreChunks*)data;       
         //MessageBoxA(NULL, "setchunk call if bytesize", "debug", MB_OK);
         WaitForSingleObject(pdvstTransferMutex, 10);
         {
             pdvstData->datachunk.direction = PD_RECEIVE;
             pdvstData->datachunk.type = STRING_TYPE;
-            memset(&pdvstData->datachunk.value.stringData, '\0', MAXSTRINGSIZE);
-            strncpy(pdvstData->datachunk.value.stringData,(char *)data, (size_t)byteSize);
+            memset(&pdvstData->datachunk.value.stringData, '\0', MAXSTRLEN);
+            strcpy(pdvstData->datachunk.value.stringData, Chunk->Data);
+            //memcpy(pdvstData->datachunk.value.stringData, Chunk->Data, MAXSTRLEN);
             pdvstData->datachunk.updated = 1;
+            
+
+            for (int i = 0; i < nParameters; i++)
+            {
+                pdvstData->vstParameters[i].type = FLOAT_TYPE;
+                pdvstData->vstParameters[i].value.floatData = Chunk->vstParam[i];
+                pdvstData->vstParameters[i].direction = PD_RECEIVE;
+                pdvstData->vstParameters[i].updated = 1;
+            }  
+            
             ReleaseMutex(pdvstTransferMutex);
         }
     }
+    
     return 0;
 }
 

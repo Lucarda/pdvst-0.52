@@ -53,6 +53,13 @@ typedef struct _pdvstProgram
     float paramValue[MAXPARAMETERS];
 } pdvstProgram;
 
+/* for programsarechunks*/
+typedef struct _pdvstProgramAreChunks
+{
+    float vstParam[MAXPARAMETERS];
+    char Data[MAXSTRLEN];
+} pdvstProgramAreChunks;
+
 class pdVstBuffer
 {
 
@@ -128,6 +135,7 @@ protected:
     char **vstParamName;
     int nParameters;
     pdvstProgram *program;
+    pdvstProgramAreChunks *Chunk;
     int nPrograms;
     int nChannels;
     int nExternalLibs;
