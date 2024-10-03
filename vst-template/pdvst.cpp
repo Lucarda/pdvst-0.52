@@ -626,32 +626,23 @@ bool pdvst::getOutputProperties(VstInt32 index, VstPinProperties* properties)
 VstInt32 pdvst::getChunk (void** data, bool isPreset)
 {
 
-    Chunk = new pdvstProgramAreChunks;
-    
-    MessageBoxA(NULL, "getchunk call", "debug", MB_OK); // all host gets here
-  
-    
+    Chunk = new pdvstProgramAreChunks;    
+    //MessageBoxA(NULL, "getchunk call", "debug", MB_OK); // all host gets here    
     for (int i = 0; i < nParameters; i++)
     {
         Chunk->vstParam[i] = vstParam[i];
-    }
-    
-    if(1)
+    }    
+    //MessageBoxA(NULL, "getchunk if data", "debug", MB_OK); // not all hosts gets here
+    WaitForSingleObject(pdvstTransferMutex, 10);
     {
-        //MessageBoxA(NULL, "getchunk if data", "debug", MB_OK); // not all hosts gets here
-        WaitForSingleObject(pdvstTransferMutex, 10);
-        {
-            memset(&Chunk->Data, '\0', MAXSTRLEN);
-            strcpy (Chunk->Data, pdvstData->datachunk.value.stringData);
-            ReleaseMutex(pdvstTransferMutex);
-        }        
+        memset(&Chunk->Data, '\0', MAXSTRLEN);
+        strcpy (Chunk->Data, pdvstData->datachunk.value.stringData);
+        ReleaseMutex(pdvstTransferMutex);
+    }        
         
-        debugLog("luc:debug-size-of-chunk %d", sizeof(*Chunk));
-        *data = (void*)Chunk;        
-        return sizeof(*Chunk);
-    }
-    else
-    return 0;
+    debugLog("luc:debug-size-of-chunk %d", sizeof(*Chunk));
+    *data = (void*)Chunk;        
+    return sizeof(*Chunk);
 }
 
 VstInt32 pdvst::setChunk (void* data, VstInt32 byteSize, bool isPreset)
@@ -667,7 +658,6 @@ VstInt32 pdvst::setChunk (void* data, VstInt32 byteSize, bool isPreset)
             pdvstData->datachunk.type = STRING_TYPE;
             memset(&pdvstData->datachunk.value.stringData, '\0', MAXSTRLEN);
             strcpy(pdvstData->datachunk.value.stringData, Chunk->Data);
-            //memcpy(pdvstData->datachunk.value.stringData, Chunk->Data, MAXSTRLEN);
             pdvstData->datachunk.updated = 1;
             
 

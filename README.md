@@ -107,9 +107,10 @@ For an example, see Pd_Gain.pdv.
     between 0 and 1 inclusive.
 
     PROGRAMSARECHUNKS = <TRUE/FALSE>
-    Save and Get Pd lists in .fxp file via ([s svstdata] and [r rvstdata])
-    Some hosts don't work correctly with this.
-    If in doubt just use FALSE.
+    All vst parameters are saved in the host session and additionally 
+    you can set/get some "Pd list" in the session or to a .fxp/.fxb file 
+    via [s svstdata] and [r rvstdata]
+
  
 
 # Pd/VST audio/midi Communication
