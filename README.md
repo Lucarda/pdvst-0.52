@@ -137,6 +137,8 @@ For an example, see the pd-gain.pd file.
 
 * `rvstparameter<integer>` : Use this symbol to receive parameter values from the VST host. Values will be floats between 0 and 1 inclusive. 
 * `svstparameter<integer>` : Use this symbol to send parameter values to the VST host. Values should be floats between 0 and 1 inclusive. 
+* `svstdata` : Use this symbol to save a Pd list as "chunk" data in the host DAW's save file (see `PROGRAMSARECHUNKS` setting above).
+* `rvstdata` : Use this symbol to receive a Pd list of "chunk" data that was saved into the DAW file by your patch. Triggered at load time.
 * `rvstopengui` : Use this symbol to receive notification that the patch's GUI should be opened or closed. The value will be either 1 or 0.
 * `rvstprognumber`: Use this symbol to receive program number changes from host.
 * `rvstprogname`: Use this symbol to receive program name changes from host.
@@ -155,11 +157,11 @@ sure to disable any MIDI message filtering in the VST host.
 
 * Windows x32 and x64 only
 * Support for embedding external gui window into host
-* multichannel audio in/out support
-* integrated vst midi-in, experimental midi-out
-* added play head information support (see examples)
+* Multichannel audio in/out support
+* Integrated CST MIDI-in, experimental MIDI-out
+* Play head information support (see examples)
+* Save chunk data to host DAW
 
 #TODO
 
 * optimize plugin loading
-* use of chunks for preset saving
