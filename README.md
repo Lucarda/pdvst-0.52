@@ -4,6 +4,8 @@
 Based on https://github.com/jyg/pure-data/tree/master/pdvst but updated to load with Pd-0.52
 or higher.
 
+Get pre-built binaries on https://github.com/Lucarda/pdvst-0.52/releases
+
 
 # How does it work ?
 
