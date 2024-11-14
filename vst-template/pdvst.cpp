@@ -179,8 +179,7 @@ pdvst::pdvst(audioMasterCallback audioMaster)
     // create editor
     if (customGui)
     {
-       editor = new pdvstEditor(this);
-
+		editor = new pdvstEditor(this);
         debugLog("   -has custom GUI-");
     }
     guiNameUpdated=false;
@@ -216,7 +215,7 @@ pdvst::pdvst(audioMasterCallback audioMaster)
 
 
 
-        //timeBeginPeriod(1);
+	//timeBeginPeriod(1);
     debugLog("startingPd...");
     // start pd.exe
     startPd();
@@ -746,7 +745,7 @@ void pdvst::process(float **input, float **output, VstInt32 sampleFrames)
             m_measure_list.setFloat(2, m_playinfos.timeSigDenominator);
             m_measure_list.setFloat(3, m_playinfos.ppqPosition);
             m_measure_list.setFloat(4, m_playinfos.ppqPositionOfLastBarStart);
-sendMessageAnything(m_patch_tie, s_measure, m_measure_list);
+			sendMessageAnything(m_patch_tie, s_measure, m_measure_list);
 
 */
 

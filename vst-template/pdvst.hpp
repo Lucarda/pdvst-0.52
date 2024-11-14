@@ -109,11 +109,8 @@ public:
     void sendGuiAction(int action);
     void sendPlugName(char * name );  // JYG : to send plug name to puredatapatch
     void sendProgChange(VstInt32 prgm); // send vst prog name and number to patch
-
- LPTSTR displayString;//= new TCHAR[MAXSTRINGSIZE];
-
-   HWND pdGui;
-   
+	LPTSTR displayString; //= new TCHAR[MAXSTRINGSIZE];
+	HWND pdGui;  
     virtual VstInt32 getChunk (void** data, bool isPreset);
     virtual VstInt32 setChunk (void* data, VstInt32 byteSize, bool isPreset);
 
@@ -164,17 +161,14 @@ protected:
     //  {JYG
     DWORD timeFromStartup; // to measure time before vst::setProgram call
     #ifdef VSTMIDIOUTENABLE
-    /** Stores a single midi event.
-   * The 'events' fields points to midiEvent.
-   */
-  VstEvents    midiOutEvents;
-  /** Last played note information is stored in midiEvent.
-   */
-  VstMidiEvent midiEvent;
-
-  // version alternative (http://stackoverflow.com/questions/359125/how-to-store-data-in-variable-length-arrays-without-causing-memory-corruption)
-  struct VstEvents *evnts;
-  VstMidiEvent midiEvnts[MAXMIDIOUTQUEUESIZE];
+    // Stores a single midi event.
+    // The 'events' fields points to midiEvent.
+	VstEvents midiOutEvents;
+    // Last played note information is stored in midiEvent.
+	VstMidiEvent midiEvent;
+    // version alternative (http://stackoverflow.com/questions/359125/how-to-store-data-in-variable-length-arrays-without-causing-memory-corruption)
+    struct VstEvents *evnts;
+    VstMidiEvent midiEvnts[MAXMIDIOUTQUEUESIZE];
 
     int nbFramesWithoutMidiOutEvent;
     #endif //VSTMIDIOUTENABLE
