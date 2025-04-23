@@ -13,23 +13,44 @@ FOO2=../vstsdk2.4/public.sdk/source/vst2.x/
 
 
 SOURCES= \
-pdvst.cpp \
-pdvstMain.cpp \
-pdvstEditor.cpp \
-$(FOO2)AudioEffect.cpp \
-$(FOO2)audioeffectx.cpp \
-$(empty)
+    pdvst.cpp \
+    pdvstMain.cpp \
+    pdvstEditor.cpp \
+    $(FOO2)AudioEffect.cpp \
+    $(FOO2)audioeffectx.cpp \
+    $(empty)
 
-WINARCH := $(shell $(CC) -dumpmachine)
+# Let (native or cross-) compiler report target triplet and isolate individual
+# words therein to facilitate later processing.
+target.triplet := $(subst -, ,$(shell $(CC) -dumpmachine))
 
-ifneq (,$(findstring i686,$(WINARCH)))
-	arch = 32
-else
-	arch = 64
+#=== operating system ==========================================================
+
+
+# The following systems are defined: Linux, Darwin, Windows. GNU and
+# GNU/kFreeBSD are treated as Linux to get the same options.
+
+ifneq ($(filter linux gnu% kfreebsd, $(target.triplet)),)
+    system = Linux
+endif
+
+ifneq ($(filter darwin%, $(target.triplet)),)
+    system = Darwin
+endif
+
+ifneq ($(filter mingw% cygwin%, $(target.triplet)),)
+    system = Windows
+    ifneq (,$(findstring i686,$(target.triplet)))
+        arch = 32
+    else
+        arch = 64
+    endif
+    all: win-build
 endif
 
 
-ALL: $(SOURCES)
+win-build:
+	@echo $(arch)
 	g++ -Wall -I. -I$(FOO) -I$(FOO2) \
 	$(SOURCES) -static-libgcc -static-libstdc++ -static -lpthread -shared -o pdvst-template.dll
 	strip pdvst-template.dll
