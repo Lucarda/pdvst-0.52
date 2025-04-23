@@ -18,9 +18,14 @@
 ** jsarlo@ucsd.edu
 */
 
-#define _WIN32_WINDOWS 0x410
-#include <windows.h>
-#include <io.h>
+#ifdef _WIN32
+    #define _WIN32_WINDOWS 0x410
+    #include <windows.h>
+    #include <io.h>
+#else
+    #include <unistd.h>
+#endif
+
 #include <stdio.h>
 #include "m_pd.h"
 #include "s_stuff.h"
@@ -31,8 +36,8 @@
 
 #define kVstTransportChanged      1
 #define	kVstTransportPlaying      2
-
 #define	kVstTransportRecording    8
+
 #ifdef VSTMIDIOUTENABLE
     EXTERN int midi_outhead;
     int _midi_outtail=0;   // _midi_outtail defined locally
@@ -89,13 +94,25 @@ char *pdvstTransferMutexName,
      *pdvstTransferFileMapName,
      *vstProcEventName,
      *pdProcEventName;
+     
 pdvstTransferData *pdvstData;
+     
 HANDLE vstHostProcess,
        pdvstTransferMutex,
        pdvstTransferFileMap,
        vstProcEvent,
        pdProcEvent;
-       pdvstTimeInfo  timeInfo;
+       
+pdvstTimeInfo  timeInfo;
+
+void pdvst_sleep(int n) 
+{
+#ifdef _WIN32
+    Sleep(n);
+#else    
+    usleep(n*1000);
+#endif
+}
 
 int tokenizeCommandLineString(char *clString, char **tokens)
 {
@@ -692,7 +709,7 @@ int scheduler()
             pdvstData->midiQueueUpdated = 0;
         }
 
-        /// flush vstmidi out messages here
+        // flush vstmidi out messages here
 #ifdef VSTMIDIOUTENABLE
         if (msw_nmidiout==0)
         {
@@ -791,7 +808,7 @@ int scheduler()
         {
             ReleaseMutex(pdvstTransferMutex);
             scheduler_tick();
-            Sleep(blockTime);
+            pdvst_sleep(blockTime);
         }
         GetExitCodeProcess(vstHostProcess, &vstHostProcessStatus);
         if (vstHostProcessStatus != STILL_ACTIVE)
