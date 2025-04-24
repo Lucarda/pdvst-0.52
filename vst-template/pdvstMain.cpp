@@ -172,6 +172,8 @@ void parseSetupFile()
     char vstSetupFileName[MAXSTRLEN];  // path to setup file if it is located in vst subdir
     int i, equalPos, progNum = -1;
 
+#if _WIN32    
+    
     // find filepaths
     GetModuleFileName((HMODULE)hInstance,
 					  (LPTSTR)tFileName,
@@ -234,6 +236,46 @@ void parseSetupFile()
             globalPluginName,
             SETUPFILEEXT);
 
+            
+#else
+    // find filepaths
+
+    int path_length = readlink("/proc/self/exe", tFileName, sizeof(tFileName));
+        if (path_length > 0 && path_length < MAXFILENAMELEN)
+            tFileName[path_length] = 0;
+
+    if (strrchr(tFileName, '/'))
+    {
+        strcpy(globalPluginName, strrchr(tFileName, '/') + 1);
+    }
+    else
+    {
+        strcpy(globalPluginName, tFileName);
+    }
+
+     // alternate setup file path in vst plugins folder
+     if (strrchr(tFileName, '/'))
+     {
+
+        strcpy(vstDataPath, tFileName);
+		*(strrchr(vstDataPath, '/') + 1) = 0;
+		sprintf(vstDataPath, "%s%s/", vstDataPath,globalPluginName);
+		 // remove .dll extension (from globalPluginName)
+        if (strstr(vstDataPath, DLL))
+        *(strstr(vstDataPath, DLL)) = 0;
+        sprintf(vstDataPath, "%s/", vstDataPath);  //
+        // path to alternate setup file
+        sprintf(vstSetupFileName,"%s%s",vstDataPath,globalPluginName);
+        // remove .dll extension
+        if (strstr(vstSetupFileName, DLL))
+        *(strstr(vstSetupFileName, DLL)) = 0;
+        // add SETUPFILEEXT extension
+        sprintf(vstSetupFileName,"%s%s",vstSetupFileName,SETUPFILEEXT);
+
+     }    
+
+
+#endif
 
 
     // initialize program info
