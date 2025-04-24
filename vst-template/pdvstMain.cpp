@@ -88,10 +88,14 @@ VST_EXPORT AEffect* main_plugin (audioMasterCallback audioMaster) { return VSTPl
 
 } // extern "C"
 
+#if _WIN32
+#define DLL ".dll"
+#else
+#define DLL ".so"   
+#endif
 
 
-
-#if WIN32
+#if _WIN32
 #include <windows.h>
 void* hInstance;
 
@@ -106,6 +110,17 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD dwReason, LPVOID lpvReserved)
 } // extern "C"
 #endif
 
+
+//linux version __attribute__((constructor)) ?
+#ifndef _WIN32
+extern "C" {
+void __attribute__((constructor)) startup() 
+{
+    parseSetupFile();
+    return;
+}
+} // extern "C"
+#endif
 
 char *trimWhitespace(char *str)
 {
@@ -129,6 +144,15 @@ char *trimWhitespace(char *str)
     }
     return (str);
 }
+
+
+// see this
+
+// https://github.com/pure-data/pure-data/blob/20a2a59d6a2c428399899e94e47ebbd035d7d413/src/s_main.c#L646
+
+// use this simple plug to debug all here (not building the rest of pdvst
+// https://github.com/AndrewBelt/HelloDAW/blob/master/VST2/HelloVST.cpp
+
 
 void parseSetupFile()
 {
@@ -164,23 +188,25 @@ void parseSetupFile()
 		*(strrchr(vstDataPath, '\\') + 1) = 0;
 		sprintf(vstDataPath, "%s%s\\", vstDataPath,globalPluginName);
 		 // remove .dll extension (from globalPluginName)
-        if (strstr(vstDataPath, ".dll"))
-        *(strstr(vstDataPath, ".dll")) = 0;
-        if (strstr(vstDataPath, ".DLL"))
-        *(strstr(vstDataPath, ".DLL")) = 0;
+        if (strstr(vstDataPath, DLL))
+        *(strstr(vstDataPath, DLL)) = 0;
         sprintf(vstDataPath, "%s\\", vstDataPath);  //
         // path to alternate setup file
         sprintf(vstSetupFileName,"%s%s",vstDataPath,globalPluginName);
         // remove .dll extension
-        if (strstr(vstSetupFileName, ".dll"))
-        *(strstr(vstSetupFileName, ".dll")) = 0;
-        if (strstr(vstSetupFileName, ".DLL"))
-        *(strstr(vstSetupFileName, ".DLL")) = 0;
+        if (strstr(vstSetupFileName, DLL))
+        *(strstr(vstSetupFileName, DLL)) = 0;
         // add SETUPFILEEXT extension
         sprintf(vstSetupFileName,"%s%s",vstSetupFileName,SETUPFILEEXT);
         //MessageBox(NULL, vstDataPath,"vstDataPath",MB_OK) ;
         //MessageBox(NULL, vstSetupFileName,"vstSetupFileName",MB_OK) ;
 
+    FILE *file_pointer;
+    file_pointer = fopen("vstMainDebug.txt", "w");
+    fprintf(file_pointer, "tFileName: %s\n", tFileName);
+    fprintf(file_pointer, "vstDataPath: %s\n", vstDataPath);
+    fprintf(file_pointer, "vstSetupFileName: %s\n", vstSetupFileName);
+    fclose(file_pointer);
 
      }
 
@@ -201,8 +227,8 @@ void parseSetupFile()
      strcpy(globalHostPdvstPath,globalPluginPath);
 
     // remove .dll extension
-    if (strstr(strlwr(globalPluginName), ".dll"))
-        *(strstr(strlwr(globalPluginName), ".dll")) = 0;
+    if (strstr(strlwr(globalPluginName), DLL))
+        *(strstr(strlwr(globalPluginName), DLL)) = 0;
     sprintf(setupFileName,
             "%s%s%s",
             globalPluginPath,
@@ -393,4 +419,8 @@ void parseSetupFile()
         }
     }
     fclose(setupFile);
+    
+    
+
+    
 }
