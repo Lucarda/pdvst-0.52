@@ -150,6 +150,12 @@ char *trimWhitespace(char *str)
 
 // https://github.com/pure-data/pure-data/blob/20a2a59d6a2c428399899e94e47ebbd035d7d413/src/s_main.c#L646
 
+
+// https://stackoverflow.com/questions/7051844/how-to-find-the-full-path-of-the-c-linux-program-from-within
+
+// https://man7.org/linux/man-pages/man3/dlinfo.3.html
+
+
 // use this simple plug to debug all here (not building the rest of pdvst
 // https://github.com/AndrewBelt/HelloDAW/blob/master/VST2/HelloVST.cpp
 
@@ -200,13 +206,6 @@ void parseSetupFile()
         sprintf(vstSetupFileName,"%s%s",vstSetupFileName,SETUPFILEEXT);
         //MessageBox(NULL, vstDataPath,"vstDataPath",MB_OK) ;
         //MessageBox(NULL, vstSetupFileName,"vstSetupFileName",MB_OK) ;
-
-    FILE *file_pointer;
-    file_pointer = fopen("vstMainDebug.txt", "w");
-    fprintf(file_pointer, "tFileName: %s\n", tFileName);
-    fprintf(file_pointer, "vstDataPath: %s\n", vstDataPath);
-    fprintf(file_pointer, "vstSetupFileName: %s\n", vstSetupFileName);
-    fclose(file_pointer);
 
      }
 
@@ -419,6 +418,14 @@ void parseSetupFile()
         }
     }
     fclose(setupFile);
+    
+    // debug file
+    FILE *file_pointer;
+    file_pointer = fopen("vstMainDebug.txt", "w");
+    fprintf(file_pointer, "tFileName: %s\n", tFileName);
+    fprintf(file_pointer, "vstDataPath: %s\n", vstDataPath);
+    fprintf(file_pointer, "vstSetupFileName: %s\n", vstSetupFileName);
+    fclose(file_pointer);
     
     
 
