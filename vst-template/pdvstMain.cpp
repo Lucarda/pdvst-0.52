@@ -43,7 +43,6 @@ long globalPluginId = 'pdvp';
 char globalExternalLib[MAXEXTERNS][MAXSTRLEN];
 char globalVstParamName[MAXPARAMS][MAXSTRLEN];
 char globalPluginPath[MAXFILENAMELEN];
-char globalVstPluginPath[MAXFILENAMELEN];
 char globalPluginName[MAXSTRLEN];
 char globalPdFile[MAXFILENAMELEN];
 char globalPureDataPath[MAXFILENAMELEN];
@@ -193,18 +192,16 @@ char *strlowercase(char *str)
 void parseSetupFile()
 {
     FILE *setupFile;
-    char setupFileName[MAXFILENAMELEN];
     char tFileName[MAXFILENAMELEN];
     char line[MAXSTRLEN];
     char param[MAXSTRLEN];
     char value[MAXSTRLEN];
     char vstDataPath[MAXSTRLEN];
-    char vstSetupFileName[MAXSTRLEN];  // path to setup file if it is located in vst subdir
+    char vstSetupFileName[MAXSTRLEN];
     int i, equalPos, progNum = -1;
 
-#if _WIN32    
-    
-    // find filepaths
+#if _WIN32     // find filepaths (Windows)   
+
     GetModuleFileName((HMODULE)hInstance,
 					  (LPTSTR)tFileName,
 					  (DWORD)MAXFILENAMELEN);
@@ -218,7 +215,7 @@ void parseSetupFile()
         strcpy(globalPluginName, tFileName);
     }
 
-     // alternate setup file path in vst plugins folder
+     // setup file path in folder
      if (strrchr(tFileName, '\\'))
      {
 
@@ -236,39 +233,15 @@ void parseSetupFile()
         *(strstr(vstSetupFileName, DLL)) = 0;
         // add SETUPFILEEXT extension
         sprintf(vstSetupFileName,"%s%s",vstSetupFileName,SETUPFILEEXT);
-        //MessageBox(NULL, vstDataPath,"vstDataPath",MB_OK) ;
-        //MessageBox(NULL, vstSetupFileName,"vstSetupFileName",MB_OK) ;
+        // remove .dll extension (again here)
+		if (strstr(strlowercase(globalPluginName), DLL))
+			*(strstr(strlowercase(globalPluginName), DLL)) = 0;
+        strcpy(globalPluginPath,vstDataPath); 
 
      }
 
-
-    GetModuleFileName(NULL,
-					  (LPTSTR)tFileName,
-					  (DWORD)MAXFILENAMELEN);
-    if (strrchr(tFileName, '\\'))
-    {
-        strcpy(globalPluginPath, tFileName);
-		*(strrchr(globalPluginPath, '\\') + 1) = 0;
-		sprintf(globalPluginPath, "%spdvst\\", globalPluginPath);
-    }
-    else
-    {
-        strcpy(globalPluginPath, tFileName);
-    }
-     strcpy(globalHostPdvstPath,globalPluginPath);
-
-    // remove .dll extension
-    if (strstr(strlowercase(globalPluginName), DLL))
-        *(strstr(strlowercase(globalPluginName), DLL)) = 0;
-    sprintf(setupFileName,
-            "%s%s%s",
-            globalPluginPath,
-            globalPluginName,
-            SETUPFILEEXT);
-
             
-#else
-    // find filepaths
+#else // find filepaths (Unix)
 
     if (strrchr(unixname, '/'))
     {
@@ -279,7 +252,7 @@ void parseSetupFile()
         strcpy(globalPluginName, unixname);
     }
 
-     // alternate setup file path in vst plugins folder
+     // setup file path in folder
      if (strrchr(unixname, '/'))
      {
 
@@ -300,6 +273,7 @@ void parseSetupFile()
 		// remove .dll extension (again here)
 		if (strstr(strlowercase(globalPluginName), DLL))
 			*(strstr(strlowercase(globalPluginName), DLL)) = 0;
+        strcpy(globalPluginPath,vstDataPath);
      }    
 
 
@@ -325,16 +299,7 @@ void parseSetupFile()
     {
         setupFile = fopen(vstSetupFileName, "r");
         //strcpy(setupFileName,vstSetupFileName);
-        strcpy(globalPluginPath,vstDataPath);
-
     }
-
-
-
-    else
-       setupFile = fopen(setupFileName, "r");
-     // parse the setup file
-    
     
     if (setupFile) {
         while (fgets(line, sizeof(line), setupFile))
@@ -504,6 +469,7 @@ void parseSetupFile()
     fprintf(file_pointer, "globalPluginName: %s\n", globalPluginName);
     fprintf(file_pointer, "vstDataPath: %s\n", vstDataPath);
     fprintf(file_pointer, "vstSetupFileName: %s\n", vstSetupFileName);
+    fprintf(file_pointer, "globalPluginPath: %s\n", globalPluginPath);
     fclose(file_pointer);
     
     

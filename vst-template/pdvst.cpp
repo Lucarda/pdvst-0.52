@@ -48,7 +48,6 @@ extern int globalNExternalLibs;
 extern char globalExternalLib[MAXEXTERNS][MAXSTRLEN];
 extern char globalVstParamName[MAXPARAMETERS][MAXSTRLEN];
 extern char globalPluginPath[MAXFILENAMELEN];
-extern char globalVstPluginPath[MAXFILENAMELEN];  // chemin d'accès dans le dossier vst contenant la dll)
 extern char globalPluginName[MAXSTRLEN];
 extern char globalPdFile[MAXFILENAMELEN];
 extern char globalPureDataPath[MAXFILENAMELEN];
@@ -161,7 +160,7 @@ pdvst::pdvst(audioMasterCallback audioMaster)
         strcpy(vstParamName[i], globalVstParamName[i]);
     }
     strcpy(pluginPath, globalPluginPath);
-    strcpy(vstPluginPath, globalVstPluginPath);
+    strcpy(vstPluginPath, globalPluginPath);
     strcpy(pluginName, globalPluginName);
     strcpy(pdFile, globalPdFile);
     debugLog("path: %s", pluginPath);
