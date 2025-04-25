@@ -27,6 +27,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdarg.h>
+#include <cstdint>
 
 #define PDBLKSIZE 64
 #define MAXEXTERNS 128
@@ -110,9 +111,11 @@ public:
     void sendPlugName(char * name );  // JYG : to send plug name to puredatapatch
     void sendProgChange(VstInt32 prgm); // send vst prog name and number to patch
 
- LPTSTR displayString;//= new TCHAR[MAXSTRINGSIZE];
-
+ char  displayString;//= new TCHAR[MAXSTRINGSIZE];
+ 
+#if _WIN32 
    HWND pdGui;
+#endif
    
     virtual VstInt32 getChunk (void** data, bool isPreset);
     virtual VstInt32 setChunk (void* data, VstInt32 byteSize, bool isPreset);
@@ -145,10 +148,12 @@ protected:
 
     bool isASynth;
     bool dspActive;
+#if _WIN32     
     HANDLE pdvstTransferMutex,
            pdvstTransferFileMap,
            vstProcEvent,
            pdProcEvent;
+#endif
     pdvstTransferData *pdvstData;
     char pdvstTransferMutexName[1024];
     char pdvstTransferFileMapName[1024];
@@ -162,7 +167,7 @@ protected:
     void updatePdvstParameters();
     void setSyncToVst(int value);
     //  {JYG
-    DWORD timeFromStartup; // to measure time before vst::setProgram call
+    uint32_t timeFromStartup; // to measure time before vst::setProgram call
     #ifdef VSTMIDIOUTENABLE
     /** Stores a single midi event.
    * The 'events' fields points to midiEvent.

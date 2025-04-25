@@ -3,8 +3,8 @@
 #include "../vstsdk2.4/public.sdk/source/vst2.x/audioeffectx.h"
 
 
-static const int NUM_INPUTS = 8;
-static const int NUM_OUTPUTS = 8;
+static const int NUM_INPUTS = 2;
+static const int NUM_OUTPUTS = 2;
 static const int NUM_PARAMS = 8;
 
 

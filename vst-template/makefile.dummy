@@ -13,7 +13,7 @@ FOO2=../vstsdk2.4/public.sdk/source/vst2.x/
 
 
 SOURCES= \
-    $(FOO2)AudioEffect.cpp \
+    $(FOO2)audioeffect.cpp \
     $(FOO2)audioeffectx.cpp \
     dummy.cpp \
     pdvstMain.cpp \
@@ -57,7 +57,7 @@ win-build:
 
 linux-build:
 	g++ -Wall -I. -I$(FOO) -I$(FOO2) \
-	$(SOURCES) -fPIC -shared -o dummy-template.so
+	$(SOURCES) -D__cdecl="" -fPIC -std=c++11 -shared -ldl -o dummy-template.so
 	strip dummy-template.so
 	
 	

@@ -17,10 +17,18 @@
 **
 ** jsarlo@ucsd.edu
 */
+#if _WIN32 
 #include <windows.h>
+#endif
 #include <math.h>
 #include "pdvst.hpp"
 #include <unistd.h>
+#include <string.h>
+
+#ifdef __linux__
+//#define _GNU_SOURCE
+#include <dlfcn.h>
+#endif
 
 static AudioEffect *effect = 0;
 bool oome = false;
@@ -48,6 +56,12 @@ bool globalProgramsAreChunks = false;
 
 char *trimWhitespace(char *str);
 void parseSetupFile();
+
+
+
+// later 
+char unixname[MAXFILENAMELEN];
+
 
 
 #include "audioeffect.h"
@@ -111,13 +125,17 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD dwReason, LPVOID lpvReserved)
 #endif
 
 
-//linux version __attribute__((constructor)) ?
+
 #ifndef _WIN32
 extern "C" {
-void __attribute__((constructor)) startup() 
+__attribute__((constructor))
+void startup(void) 
 {
+	Dl_info dl_info;
+	dladdr((void *)startup, &dl_info);
+	strcpy(unixname, dl_info.dli_fname);	
     parseSetupFile();
-    return;
+    return ;
 }
 } // extern "C"
 #endif
@@ -148,6 +166,8 @@ char *trimWhitespace(char *str)
 
 // see this
 
+// https://stackoverflow.com/questions/1642128/linux-how-to-get-full-name-of-shared-object-just-loaded-from-the-constructor
+
 // https://github.com/pure-data/pure-data/blob/20a2a59d6a2c428399899e94e47ebbd035d7d413/src/s_main.c#L646
 
 
@@ -158,6 +178,16 @@ char *trimWhitespace(char *str)
 
 // use this simple plug to debug all here (not building the rest of pdvst
 // https://github.com/AndrewBelt/HelloDAW/blob/master/VST2/HelloVST.cpp
+
+
+char *strlowercase(char *str) 
+{
+    for (int i = 0; str[i]; i++) 
+    {
+        str[i] = tolower(str[i]);
+    }
+    return str;
+}
 
 
 void parseSetupFile()
@@ -228,8 +258,8 @@ void parseSetupFile()
      strcpy(globalHostPdvstPath,globalPluginPath);
 
     // remove .dll extension
-    if (strstr(strlwr(globalPluginName), DLL))
-        *(strstr(strlwr(globalPluginName), DLL)) = 0;
+    if (strstr(strlowercase(globalPluginName), DLL))
+        *(strstr(strlowercase(globalPluginName), DLL)) = 0;
     sprintf(setupFileName,
             "%s%s%s",
             globalPluginPath,
@@ -240,24 +270,20 @@ void parseSetupFile()
 #else
     // find filepaths
 
-    int path_length = readlink("/proc/self/exe", tFileName, sizeof(tFileName));
-        if (path_length > 0 && path_length < MAXFILENAMELEN)
-            tFileName[path_length] = 0;
-
-    if (strrchr(tFileName, '/'))
+    if (strrchr(unixname, '/'))
     {
-        strcpy(globalPluginName, strrchr(tFileName, '/') + 1);
+        strcpy(globalPluginName, strrchr(unixname, '/') + 1);
     }
     else
     {
-        strcpy(globalPluginName, tFileName);
+        strcpy(globalPluginName, unixname);
     }
 
      // alternate setup file path in vst plugins folder
-     if (strrchr(tFileName, '/'))
+     if (strrchr(unixname, '/'))
      {
 
-        strcpy(vstDataPath, tFileName);
+        strcpy(vstDataPath, unixname);
 		*(strrchr(vstDataPath, '/') + 1) = 0;
 		sprintf(vstDataPath, "%s%s/", vstDataPath,globalPluginName);
 		 // remove .dll extension (from globalPluginName)
@@ -271,7 +297,9 @@ void parseSetupFile()
         *(strstr(vstSetupFileName, DLL)) = 0;
         // add SETUPFILEEXT extension
         sprintf(vstSetupFileName,"%s%s",vstSetupFileName,SETUPFILEEXT);
-
+		// remove .dll extension (again here)
+		if (strstr(strlowercase(globalPluginName), DLL))
+			*(strstr(strlowercase(globalPluginName), DLL)) = 0;
      }    
 
 
@@ -300,9 +328,14 @@ void parseSetupFile()
         strcpy(globalPluginPath,vstDataPath);
 
     }
+
+
+
     else
        setupFile = fopen(setupFileName, "r");
      // parse the setup file
+    
+    
     if (setupFile) {
         while (fgets(line, sizeof(line), setupFile))
         {
@@ -312,7 +345,7 @@ void parseSetupFile()
                 strcpy(param, line);
                 param[equalPos] = 0;
                 strcpy(value, line + equalPos + 1);
-                strcpy(param, trimWhitespace(strlwr(param)));
+                strcpy(param, trimWhitespace(strlowercase(param)));
                 strcpy(value, trimWhitespace(value));
                 // number of channels
                 if (strcmp(param, "channels") == 0)
@@ -321,12 +354,12 @@ void parseSetupFile()
                 // main PD patch
                 if (strcmp(param, "main") == 0)
                 {
-                    // strcpy(globalPdFile, strlwr(value));
+                    // strcpy(globalPdFile, strlowercase(value));
                     strcpy(globalPdFile, value);
                 }
                 if (strcmp(param, "pdpath") == 0)
                  {
-                    // strcpy(globalPureDataPath, strlwr(value));
+                    // strcpy(globalPureDataPath, strlowercase(value));
                       strcpy(globalPureDataPath, value);
 
                 }
@@ -340,11 +373,11 @@ void parseSetupFile()
                 // is vst instrument
                 if (strcmp(param, "synth") == 0)
                 {
-                    if (strcmp(strlwr(value), "true") == 0)
+                    if (strcmp(strlowercase(value), "true") == 0)
                     {
                         globalIsASynth = true;
                     }
-                    else if (strcmp(strlwr(value), "false") == 0)
+                    else if (strcmp(strlowercase(value), "false") == 0)
                     {
                         globalIsASynth = false;
                     }
@@ -376,11 +409,11 @@ void parseSetupFile()
                 // has custom gui
                 if (strcmp(param, "customgui") == 0)
                 {
-                    if (strcmp(strlwr(value), "true") == 0)
+                    if (strcmp(strlowercase(value), "true") == 0)
                     {
                         globalCustomGui = true;
                     }
-                    else if (strcmp(strlwr(value), "false") == 0)
+                    else if (strcmp(strlowercase(value), "false") == 0)
                     {
                         globalCustomGui = false;
                     }
@@ -399,11 +432,11 @@ void parseSetupFile()
 				// debug (show Pd GUI)
 				if (strcmp(param, "debug") == 0)
                 {
-                    if (strcmp(strlwr(value), "true") == 0)
+                    if (strcmp(strlowercase(value), "true") == 0)
                     {
                         globalDebug = true;
                     }
-                    else if (strcmp(strlwr(value), "false") == 0)
+                    else if (strcmp(strlowercase(value), "false") == 0)
                     {
                         globalDebug = false;
                     }
@@ -447,24 +480,28 @@ void parseSetupFile()
                 // programsarechunks (save custom data in .fxp or .fxb file)
 				if (strcmp(param, "programsarechunks") == 0)
                 {
-                    if (strcmp(strlwr(value), "true") == 0)
+                    if (strcmp(strlowercase(value), "true") == 0)
                     {
                         globalProgramsAreChunks = true;
                     }
-                    else if (strcmp(strlwr(value), "false") == 0)
+                    else if (strcmp(strlowercase(value), "false") == 0)
                     {
                         globalProgramsAreChunks = false;
                     }
                 }
             }
         }
-    }
-    fclose(setupFile);
+
+    } 
+    if (setupFile) fclose(setupFile);
+
+ 
+
     
     // debug file
     FILE *file_pointer;
     file_pointer = fopen("vstMainDebug.txt", "w");
-    fprintf(file_pointer, "tFileName: %s\n", tFileName);
+    fprintf(file_pointer, "globalPluginName: %s\n", globalPluginName);
     fprintf(file_pointer, "vstDataPath: %s\n", vstDataPath);
     fprintf(file_pointer, "vstSetupFileName: %s\n", vstSetupFileName);
     fclose(file_pointer);

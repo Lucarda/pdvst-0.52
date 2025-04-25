@@ -21,8 +21,13 @@
 #ifndef __pdvstEditor
 #define __pdvstEditor
 #include <stdio.h>
-#include <windows.h>
 #include "aeffeditor.h"
+#if _WIN32 
+#include <windows.h>
+#endif
+
+
+#if _WIN32 
 
    typedef struct _enumparms
     {
@@ -58,4 +63,8 @@ private:
 
 };
 #endif
+#endif
+
+#if _WIN32
 static BOOL CALLBACK enumwnd(HWND hwnd,LPARAM lParam);
+#endif
