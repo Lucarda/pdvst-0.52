@@ -103,7 +103,7 @@ bool fexists(const char *filename)
 //-------------------------------------------------------------------------------------------------------
 AudioEffect* createEffectInstance (audioMasterCallback audioMaster)
 {
-
+    //MessageBox(NULL,"createinstance","lucarda",MB_OK);
 	return new pdvst (audioMaster);
 }
 
@@ -266,6 +266,8 @@ void pdvst::debugLog(char *fmt, ...)
 
 void pdvst::startPd()
 {
+    
+    //MessageBox(NULL,"startpd","lucarda",MB_OK);
 
     int i;
     STARTUPINFO si;
@@ -315,6 +317,14 @@ void pdvst::startPd()
     {
         strcpy(debugString, " -nogui");
     }
+    
+    
+    
+
+    
+    
+    
+    
     if (strcmp(globalPureDataPath, "") == 0)  // unspecified puredata path. Defaults to globalHostPdvstPath
         {
             sprintf(commandLineArgs, "%s\\pd\\bin\\pd.exe", globalHostPdvstPath);
@@ -344,7 +354,7 @@ void pdvst::startPd()
                  {
                     sprintf(errorMessage,"pd.exe program not found. Check your settings in \n%s%s.pdv \n setup file. (search for the line PDPATH)",
                             globalPluginPath,globalPluginName);
-                    MessageBox(NULL,errorMessage,"ERROR",MB_OK);
+                    //MessageBox(NULL,errorMessage,"ERROR",MB_OK);
                     return;
                 }
         }
@@ -692,155 +702,6 @@ VstInt32 pdvst::canDo(char* text)
 	return -1;
 }
 
-void pdvst::process(float **input, float **output, VstInt32 sampleFrames)
-{
-   #ifdef VSTMIDIOUTENABLE
-
-     WaitForSingleObject(pdvstTransferMutex, 10);//if (WaitForSingleObject(pdvstTransferMutex, 100)!= WAIT_TIMEOUT)
-    {
-        if (pdvstData->midiOutQueueUpdated)
-        {
-            // Faire une loop pour parcourir la midiqueue et recopier
-            //dans la structure midiOutEvents
-            int midiOutQueueSize=pdvstData->midiOutQueueSize;
-            for (int ka=0;ka<midiOutQueueSize;ka++)
-            {
-                midiEvnts[ka].midiData[0] =  pdvstData->midiOutQueue[ka].statusByte;
-                midiEvnts[ka].midiData[1] = pdvstData->midiOutQueue[ka].dataByte1;
-                midiEvnts[ka].midiData[2] = pdvstData->midiOutQueue[ka].dataByte2;
-            }
-            evnts->numEvents=midiOutQueueSize;
-
-            sendVstEventsToHost(evnts);  /// TODO : rajouter un test de réussite
-            pdvstData->midiOutQueueUpdated=0;
-            pdvstData->midiOutQueueSize=0;
-
-             evnts->numEvents=0;
-        }
-      ReleaseMutex(pdvstTransferMutex);
-    }
-
-    #endif // VSTMIDIOUTENABLE
-
-
-  /*      // Get play head information
-      VstTimeInfo * info = getTimeInfo(
-      kVstTempoValid       |
-      kVstPpqPosValid      |
-      kVstTransportPlaying |
-      kVstTransportChanged |
-      kVstTransportCycleActive |
-      kVstTransportRecording   |
-      kVstAutomationWriting    |
-      kVstAutomationReading    |
-      0);
-
-   /*    if(infos)
-        {
-            m_playing_list.setFloat(0, m_playinfos.isPlaying);
-            m_playing_list.setFloat(1, m_playinfos.timeInSeconds);
-            sendMessageAnything(m_patch_tie, s_playing, m_playing_list);
-            m_measure_list.setFloat(0, m_playinfos.bpm);
-            m_measure_list.setFloat(1, m_playinfos.timeSigNumerator);
-            m_measure_list.setFloat(2, m_playinfos.timeSigDenominator);
-            m_measure_list.setFloat(3, m_playinfos.ppqPosition);
-            m_measure_list.setFloat(4, m_playinfos.ppqPositionOfLastBarStart);
-sendMessageAnything(m_patch_tie, s_measure, m_measure_list);
-
-*/
-
-  int i, j, k, l;
-    int framesOut = 0;
-
-    if (!dspActive)
-    {
-        resume();
-    }
-    else
-    {
-        setSyncToVst(1);
-    }
-
-
-    for (i = 0; i < sampleFrames; i++)
-    {
-        for (j = 0; j < audioBuffer->nChannels; j++)
-        {
-            audioBuffer->in[j][audioBuffer->inFrameCount] = input[j][i];
-        }
-        (audioBuffer->inFrameCount)++;
-        // if enough samples to process then do it
-        if (audioBuffer->inFrameCount >= PDBLKSIZE)
-        {
-            audioBuffer->inFrameCount = 0;
-            updatePdvstParameters();
-            // wait for pd process event
-            //   { JYG
-            //WaitForSingleObject(pdProcEvent, 10000);///int couldSync = WaitForSingleObject(pdProcEvent, 100)!= WAIT_TIMEOUT;
-            WaitForSingleObject(pdProcEvent,10);
-            //WaitForSingleObject(pdProcEvent, 10000);
-            /// JYG: 10000 était une valeur trop élevée qui faisait planter ableton live 8.04, va savoir pourquoi
-            // JYG }
-            ///if (couldSync)
-                ResetEvent(pdProcEvent);
-
-            for (k = 0; k < PDBLKSIZE; k++)
-            {
-                for (l = 0; l < audioBuffer->nChannels; l++)
-                {
-                    while (audioBuffer->outFrameCount >= audioBuffer->size)
-                    {
-                        audioBuffer->resize(audioBuffer->size * 2);
-                    }
-                    // get pd processed samples
-                    ///if (couldSync)
-                    {
-                    // get pd processed samples
-                        audioBuffer->out[l][audioBuffer->outFrameCount] = pdvstData->samples[l][k];
-                        // put new samples in for processing
-                        pdvstData->samples[l][k] = audioBuffer->in[l][k];
-                    }
-
-                }
-                (audioBuffer->outFrameCount)++;
-            }
-            ///if (couldSync)
-                pdvstData->sampleRate = (int)getSampleRate();
-            // signal vst process event
-            SetEvent(vstProcEvent);
-        }
-    }
-    // output pd processed samples
-    for (i = 0; i < sampleFrames; i++)
-    {
-        for (j = 0; j < audioBuffer->nChannels; j++)
-        {
-            if (audioBuffer->outFrameCount > 0)
-            {
-                output[j][i] = audioBuffer->out[j][i];
-            }
-            else
-            {
-                output[j][i] = 0;
-            }
-        }
-        if (audioBuffer->outFrameCount > 0)
-        {
-            audioBuffer->outFrameCount--;
-            framesOut++;
-        }
-    }
-    // shift any remaining buffered out samples
-    if (audioBuffer->outFrameCount > 0)
-    {
-        for (i = 0; i < audioBuffer->nChannels; i++)
-        {
-            memmove(&(audioBuffer->out[i][0]),
-                    &(audioBuffer->out[i][framesOut]),
-                    (audioBuffer->outFrameCount) * sizeof(float));
-        }
-    }
-}
 
 DWORD WINAPI NotifySyncError(LPVOID lpParam) {
     MessageBoxA(NULL, "Le processus PureData met du temps à répondre", "PdVST", MB_OK);

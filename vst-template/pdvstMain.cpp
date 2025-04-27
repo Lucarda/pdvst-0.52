@@ -117,7 +117,15 @@ extern "C" {
 BOOL WINAPI DllMain(HINSTANCE hInst, DWORD dwReason, LPVOID lpvReserved)
 {
     hInstance = hInst;
-    parseSetupFile();
+    switch( dwReason ) 
+    { 
+        case DLL_PROCESS_ATTACH:
+         // Initialize once for each new process.
+         // Return FALSE to fail DLL load.
+            
+        parseSetupFile();
+        break;
+    }
     return 1;
 }
 } // extern "C"
@@ -200,7 +208,12 @@ void parseSetupFile()
     char vstSetupFileName[MAXSTRLEN];
     int i, equalPos, progNum = -1;
 
-#if _WIN32     // find filepaths (Windows)   
+#if _WIN32     // find filepaths (Windows) 
+
+
+    //MessageBox(NULL,"errorMessage","first",MB_OK);
+
+  
 
     GetModuleFileName((HMODULE)hInstance,
 					  (LPTSTR)tFileName,
@@ -293,6 +306,9 @@ void parseSetupFile()
     globalNPrograms = 1;
 
 
+    //MessageBox(NULL,"look for pdv file","lucarda",MB_OK);
+    
+    
     // check existence of setup file in vst-subfolder
     if( access(vstSetupFileName, F_OK ) != -1 )
         // if exists choose this alternate file
@@ -302,6 +318,7 @@ void parseSetupFile()
     }
     
     if (setupFile) {
+        
         while (fgets(line, sizeof(line), setupFile))
         {
             equalPos = strchr(line, '=') - line;
@@ -460,9 +477,9 @@ void parseSetupFile()
     } 
     if (setupFile) fclose(setupFile);
 
- 
+    //MessageBox(NULL,"we closed the pdv file","lucarda",MB_OK);
 
-    
+#if 0    
     // debug file
     FILE *file_pointer;
     file_pointer = fopen("vstMainDebug.txt", "w");
@@ -472,7 +489,7 @@ void parseSetupFile()
     fprintf(file_pointer, "globalPluginPath: %s\n", globalPluginPath);
     fclose(file_pointer);
     
-    
+#endif    
 
     
 }

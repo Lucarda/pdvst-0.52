@@ -88,7 +88,6 @@ public:
     pdvst(audioMasterCallback audioMaster);
     ~pdvst();
 
-    virtual void process(float **inputs, float **outputs, VstInt32 sampleFrames);
     virtual void processReplacing(float **inputs, float **outputs,
                                   VstInt32 sampleFrames);
     virtual VstInt32 processEvents (VstEvents* events);
@@ -104,17 +103,17 @@ public:
     virtual bool getEffectName(char* name);
     virtual bool getOutputProperties(VstInt32 index, VstPinProperties* properties);
     virtual VstInt32 canDo (char* text);
-   // virtual VstInt32 canMono ();
+    // virtual VstInt32 canMono ();
     virtual void suspend();
     virtual void resume();
     void sendGuiAction(int action);
     void sendPlugName(char * name );  // JYG : to send plug name to puredatapatch
     void sendProgChange(VstInt32 prgm); // send vst prog name and number to patch
 
- char  displayString;//= new TCHAR[MAXSTRINGSIZE];
+    char  displayString;//= new TCHAR[MAXSTRINGSIZE];
  
 #if _WIN32 
-   HWND pdGui;
+    HWND pdGui;
 #endif
    
     virtual VstInt32 getChunk (void** data, bool isPreset);
@@ -169,23 +168,21 @@ protected:
     //  {JYG
     uint32_t timeFromStartup; // to measure time before vst::setProgram call
     #ifdef VSTMIDIOUTENABLE
-    /** Stores a single midi event.
-   * The 'events' fields points to midiEvent.
-   */
-  VstEvents    midiOutEvents;
-  /** Last played note information is stored in midiEvent.
-   */
-  VstMidiEvent midiEvent;
+        /** Stores a single midi event.
+        * The 'events' fields points to midiEvent.
+        */
+        VstEvents    midiOutEvents;
+        /** Last played note information is stored in midiEvent.
+        */
+        VstMidiEvent midiEvent;
 
-  // version alternative (http://stackoverflow.com/questions/359125/how-to-store-data-in-variable-length-arrays-without-causing-memory-corruption)
-  struct VstEvents *evnts;
-  VstMidiEvent midiEvnts[MAXMIDIOUTQUEUESIZE];
+        // version alternative (http://stackoverflow.com/questions/359125/how-to-store-data-in-variable-length-arrays-without-causing-memory-corruption)
+        struct VstEvents *evnts;
+        VstMidiEvent midiEvnts[MAXMIDIOUTQUEUESIZE];
 
-    int nbFramesWithoutMidiOutEvent;
+        int nbFramesWithoutMidiOutEvent;
     #endif //VSTMIDIOUTENABLE
     int syncDefeatNumber;
-
-
     // JYG  }
 };
 
