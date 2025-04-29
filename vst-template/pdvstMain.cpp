@@ -32,7 +32,6 @@
 
 static AudioEffect *effect = 0;
 bool oome = false;
-//HINSTANCE hInstance;
 bool globalIsASynth = false;
 bool globalDebug = false;
 int globalNChannels = 0;
@@ -56,12 +55,8 @@ bool globalProgramsAreChunks = false;
 char *trimWhitespace(char *str);
 void parseSetupFile();
 
-
-
 // later 
 char unixname[MAXFILENAMELEN];
-
-
 
 #include "audioeffect.h"
 
@@ -82,7 +77,7 @@ VST_EXPORT AEffect *VSTPluginMain(audioMasterCallback audioMaster)
 	if (!audioMaster(0, audioMasterVersion, 0, 0, 0, 0))
         return 0;  // old version
 
-// Create the AudioEffect
+    // Create the AudioEffect
 	AudioEffect* effect = createEffectInstance (audioMaster);
 	if (!effect)
 		return 0;
@@ -98,43 +93,28 @@ VST_EXPORT AEffect* MAIN (audioMasterCallback audioMaster) { return VSTPluginMai
 #elif BEOS
 VST_EXPORT AEffect* main_plugin (audioMasterCallback audioMaster) { return VSTPluginMain (audioMaster); }
 #endif
-
 } // extern "C"
 
-#if _WIN32
-#define DLL ".dll"
-#else
-#define DLL ".so"   
-#endif
 
-
+extern "C" {    
 #if _WIN32
-#include <windows.h>
 void* hInstance;
-
-extern "C" {
-
 BOOL WINAPI DllMain(HINSTANCE hInst, DWORD dwReason, LPVOID lpvReserved)
 {
     hInstance = hInst;
     switch( dwReason ) 
     { 
         case DLL_PROCESS_ATTACH:
-         // Initialize once for each new process.
-         // Return FALSE to fail DLL load.
-            
+        // Initialize once for each new process.
+        // Return FALSE to fail DLL load.           
         parseSetupFile();
         break;
     }
     return 1;
 }
-} // extern "C"
-#endif
 
+#else
 
-
-#ifndef _WIN32
-extern "C" {
 __attribute__((constructor))
 void startup(void) 
 {
@@ -144,8 +124,9 @@ void startup(void)
     parseSetupFile();
     return ;
 }
-} // extern "C"
 #endif
+} // extern "C"
+
 
 char *trimWhitespace(char *str)
 {
@@ -208,13 +189,8 @@ void parseSetupFile()
     char vstSetupFileName[MAXSTRLEN];
     int i, equalPos, progNum = -1;
 
-#if _WIN32     // find filepaths (Windows) 
-
-
-    //MessageBox(NULL,"errorMessage","first",MB_OK);
-
-  
-
+    #if _WIN32     // find filepaths (Windows) 
+    #define DLL ".dll"
     GetModuleFileName((HMODULE)hInstance,
 					  (LPTSTR)tFileName,
 					  (DWORD)MAXFILENAMELEN);
@@ -227,10 +203,9 @@ void parseSetupFile()
     {
         strcpy(globalPluginName, tFileName);
     }
-
      // setup file path in folder
-     if (strrchr(tFileName, '\\'))
-     {
+    if (strrchr(tFileName, '\\'))
+    {
 
         strcpy(vstDataPath, tFileName);
 		*(strrchr(vstDataPath, '\\') + 1) = 0;
@@ -251,11 +226,9 @@ void parseSetupFile()
 			*(strstr(strlowercase(globalPluginName), DLL)) = 0;
         strcpy(globalPluginPath,vstDataPath); 
 
-     }
-
-            
-#else // find filepaths (Unix)
-
+    }            
+    #else // find filepaths (Unix)
+    #define DLL ".so"
     if (strrchr(unixname, '/'))
     {
         strcpy(globalPluginName, strrchr(unixname, '/') + 1);
@@ -264,11 +237,9 @@ void parseSetupFile()
     {
         strcpy(globalPluginName, unixname);
     }
-
      // setup file path in folder
-     if (strrchr(unixname, '/'))
-     {
-
+    if (strrchr(unixname, '/'))
+    {
         strcpy(vstDataPath, unixname);
 		*(strrchr(vstDataPath, '/') + 1) = 0;
 		sprintf(vstDataPath, "%s%s/", vstDataPath,globalPluginName);
@@ -287,36 +258,23 @@ void parseSetupFile()
 		if (strstr(strlowercase(globalPluginName), DLL))
 			*(strstr(strlowercase(globalPluginName), DLL)) = 0;
         strcpy(globalPluginPath,vstDataPath);
-     }    
-
-
-#endif
-
-
+    }
+    #endif
     // initialize program info
-
-
-
     strcpy(globalProgram[0].name, "Default");
     memset(globalProgram[0].paramValue, 0, MAXPARAMS * sizeof(float));
     // initialize parameter info
     globalNParams = 0;
     for (i = 0; i < MAXPARAMS; i++)
         strcpy(globalVstParamName[i], "<unnamed>");
-    globalNPrograms = 1;
-
-
-    //MessageBox(NULL,"look for pdv file","lucarda",MB_OK);
-    
-    
+    globalNPrograms = 1;   
     // check existence of setup file in vst-subfolder
     if( access(vstSetupFileName, F_OK ) != -1 )
         // if exists choose this alternate file
     {
         setupFile = fopen(vstSetupFileName, "r");
         //strcpy(setupFileName,vstSetupFileName);
-    }
-    
+    }   
     if (setupFile) {
         
         while (fgets(line, sizeof(line), setupFile))
@@ -476,20 +434,14 @@ void parseSetupFile()
 
     } 
     if (setupFile) fclose(setupFile);
-
-    //MessageBox(NULL,"we closed the pdv file","lucarda",MB_OK);
-
 #if 0    
-    // debug file
+    // vstmain debug file
     FILE *file_pointer;
     file_pointer = fopen("vstMainDebug.txt", "w");
     fprintf(file_pointer, "globalPluginName: %s\n", globalPluginName);
     fprintf(file_pointer, "vstDataPath: %s\n", vstDataPath);
     fprintf(file_pointer, "vstSetupFileName: %s\n", vstSetupFileName);
     fprintf(file_pointer, "globalPluginPath: %s\n", globalPluginPath);
-    fclose(file_pointer);
-    
+    fclose(file_pointer);    
 #endif    
-
-    
 }

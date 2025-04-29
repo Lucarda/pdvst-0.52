@@ -5,6 +5,11 @@
 
 PDDIR="C:/Program Files/Pd"
 
+SOURCES= \
+    vstschedlib.c \
+    ../vst-template/cross-helper.cpp \
+    $(empty)
+
 # Let (native or cross-) compiler report target triplet and isolate individual
 # words therein to facilitate later processing.
 target.triplet := $(subst -, ,$(shell $(CC) -dumpmachine))
@@ -37,7 +42,7 @@ endif
 
 win-build:
 	@echo $(arch)
-	gcc -Wall -I$(PDDIR)/src -I../vst-template vstschedlib.c -static-libgcc \
+	gcc -Wall -I$(PDDIR)/src -I../vst-template $(SOURCES) -static-libgcc \
     -shared -L$(PDDIR)/bin -l:pd.dll -o vstschedlib.dll
 	strip vstschedlib.dll
 	#cp vstschedlib.dll ../build/pd-scheduler$(arch)/vstschedlib.dll

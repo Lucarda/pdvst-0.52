@@ -42,6 +42,7 @@
 #define SETUPFILEEXT ".pdv"
 #define DEFPDVSTBUFFERSIZE 1024
 
+
 extern "C"
 {
     #include "pdvstTransfer.h"
@@ -120,6 +121,7 @@ public:
     virtual VstInt32 setChunk (void* data, VstInt32 byteSize, bool isPreset);
 
 protected:
+
     static int referenceCount;
     void debugLog(char *fmt, ...);
     FILE *debugFile;
@@ -147,12 +149,18 @@ protected:
 
     bool isASynth;
     bool dspActive;
-#if _WIN32     
-    HANDLE pdvstTransferMutex,
-           pdvstTransferFileMap,
-           vstProcEvent,
-           pdProcEvent;
-#endif
+#if _WIN32    
+    HANDLE  pdvstTransferMutex,
+            pdvstTransferFileMap,
+            vstProcEvent,
+            pdProcEvent;
+#else
+    pthread_mutex_t     pdvstTransferMutex;
+    pthread_cond_t      pdvstTransferCond;
+    FD      pdvstTransferFileMap,
+            vstProcEvent,
+            pdProcEvent;    
+#endif              
     pdvstTransferData *pdvstData;
     char pdvstTransferMutexName[1024];
     char pdvstTransferFileMapName[1024];

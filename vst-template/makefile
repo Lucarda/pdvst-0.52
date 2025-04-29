@@ -18,6 +18,7 @@ SOURCES= \
     pdvstEditor.cpp \
     $(FOO2)AudioEffect.cpp \
     $(FOO2)audioeffectx.cpp \
+    cross-helper.cpp \
     $(empty)
 
 # Let (native or cross-) compiler report target triplet and isolate individual
