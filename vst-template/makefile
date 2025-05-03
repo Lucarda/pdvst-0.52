@@ -41,11 +41,6 @@ endif
 
 ifneq ($(filter mingw% cygwin%, $(target.triplet)),)
     system = Windows
-    ifneq (,$(findstring i686,$(target.triplet)))
-        arch = 32
-    else
-        arch = 64
-    endif
     all: win-build
 endif
 
@@ -55,12 +50,12 @@ win-build:
 	g++ -Wall -I. -I$(FOO) -I$(FOO2) \
 	$(SOURCES) -static-libgcc -static-libstdc++ -static -lpthread -shared -o pdvst-template.dll
 	strip pdvst-template.dll
-	cp pdvst-template.dll ../build/Release$(arch)/pdvst-template.dll
-	cp pdvst-template.dll ../build/Release$(arch)/Pd_Gain.dll
-	cp pdvst-template.dll ../build/Release$(arch)/Pd_Gain-gui.dll
-	cp pdvst-template.dll ../build/Release$(arch)/Pd_Gain-nogui.dll
-	cp pdvst-template.dll ../build/Release$(arch)/Pd_Midi.dll
-	cp pdvst-template.dll ../build/Release$(arch)/Pd_Chunks-test.dll
+	cp pdvst-template.dll ../build/pdvst-template.dll
+	cp pdvst-template.dll ../build/Pd_Gain.dll
+	cp pdvst-template.dll ../build/Pd_Gain-gui.dll
+	cp pdvst-template.dll ../build/Pd_Gain-nogui.dll
+	cp pdvst-template.dll ../build/Pd_Midi.dll
+	cp pdvst-template.dll ../build/Pd_Chunks-test.dll
 
 	
 	

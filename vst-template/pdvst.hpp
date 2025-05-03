@@ -42,6 +42,12 @@
 #define SETUPFILEEXT ".pdv"
 #define DEFPDVSTBUFFERSIZE 1024
 
+#if _WIN32
+
+#else
+    #include <semaphore.h>
+#endif
+
 
 extern "C"
 {
@@ -155,9 +161,8 @@ protected:
             vstProcEvent,
             pdProcEvent;
 #else
-    pthread_mutex_t     pdvstTransferMutex;
-    pthread_cond_t      pdvstTransferCond;
-    FD      pdvstTransferFileMap,
+    FD      pdvstTransferFileMap;
+    sem_t   pdvstTransferMutex,
             vstProcEvent,
             pdProcEvent;    
 #endif              

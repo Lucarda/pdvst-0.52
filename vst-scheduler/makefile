@@ -30,11 +30,6 @@ endif
 
 ifneq ($(filter mingw% cygwin%, $(target.triplet)),)
     system = Windows
-    ifneq (,$(findstring i686,$(target.triplet)))
-        arch = 32
-    else
-        arch = 64
-    endif
     all: win-build
 endif
 
@@ -46,5 +41,5 @@ win-build:
     -shared -L$(PDDIR)/bin -l:pd.dll -o vstschedlib.dll
 	strip vstschedlib.dll
 	#cp vstschedlib.dll ../build/pd-scheduler$(arch)/vstschedlib.dll
-	cp vstschedlib.dll ../build/Release$(arch)/.pd/bin/vstschedlib.dll
+	cp vstschedlib.dll ../build/.pd/bin/vstschedlib.dll
 	#cp vstschedlib.dll ../build/Release$(arch)/vstschedlib.dll

@@ -1,14 +1,15 @@
 # folders
 
-build/Release32/.pd
-build/Release64/.pd
+build/.pd
+build/.pd
 vstsdk2.4
 
 # binaries
 
 *.dll
+*.so
 
 # files
 
-build/Release64/pdvstdebug.txt
-build/Release32/pdvstdebug.txt
+build/pdvstdebug.txt
+build/pdvstdebug.txt
