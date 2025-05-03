@@ -27,6 +27,8 @@
     #include <windows.h>
 #else
     #include <semaphore.h>
+    #include <fcntl.h>
+    #include <sys/mman.h>
 #endif
 #include <string.h>
 #include <stdlib.h>
@@ -112,7 +114,8 @@ bool fexists(const char *filename)
     int xxWaitForSingleObject(sem_t mutex, int ms);
     int xxReleaseMutex(sem_t mutex);
     void xxSetEvent(sem_t mutex);
-    void xxResetEvent(sem_t mutex)
+    void xxResetEvent(sem_t mutex);
+    int fd;
 #endif
 
 
@@ -237,7 +240,6 @@ pdvst::pdvst(audioMasterCallback audioMaster)
     // start pd.exe
     startPd();
     debugLog("done");
-    debugLog("infinite defined number: %d", INFINITE);
     //setProgram(curProgram);
     referenceCount++;
 
@@ -254,9 +256,16 @@ pdvst::~pdvst()
 
     referenceCount--;
     pdvstData->active = 0;
-    CloseHandle(pdvstTransferMutex);
-    UnmapViewOfFile(pdvstTransferFileMap);
-    CloseHandle(pdvstTransferFileMap);
+    #ifdef _WIN32
+        CloseHandle(pdvstTransferMutex);
+        UnmapViewOfFile(pdvstTransferFileMap);
+        CloseHandle(pdvstTransferFileMap);
+    #else
+        sem_close(pdvstTransferMutexName);
+        sem_unlink(pdvstTransferMutexName);
+        munmap(pdvstTransferFileMap, sizeof(pdvstTransferData));
+        close(fd);
+    #endif
     for (i = 0; i < MAXPARAMETERS; i++)
         delete vstParamName[i];
     delete vstParamName;
@@ -285,14 +294,14 @@ void pdvst::debugLog(char *fmt, ...)
 void pdvst::startPd()
 {
     
-    //MessageBox(NULL,"startpd","lucarda",MB_OK);
 
-    int i;
-    STARTUPINFO si;
-    PROCESS_INFORMATION pi;
     char commandLineArgs[MAXSTRLEN],
          debugString[MAXSTRLEN],pathToCheck[MAXSTRLEN];
 
+    #if _WIN32 //Windows
+    
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
@@ -314,6 +323,25 @@ void pdvst::startPd()
                                                    0,
                                                    0,
                                                    sizeof(pdvstTransferData));
+    #else // Unix
+        
+    sprintf(pdvstTransferMutexName, "/mutex%d%x", getpid(), this);
+    sprintf(pdvstTransferFileMapName, "/filemap%d%x", getpid(), this);
+    sprintf(vstProcEventName, "/vstprocevent%d%x", getpid(), this);
+    sprintf(pdProcEventName, "/pdprocevent%d%x", getpid(), this);
+    sem_open(pdvstTransferMutexName, O_CREAT, 0666, 1);
+    vstProcEvent = sem_open(vstProcEventName, O_CREAT, 0666, 1);  // Initial value 1 (TRUE)
+    pdProcEvent = sem_open(pdProcEventName, O_CREAT, 0666, 0);
+    fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);
+    ftruncate(fd, sizeof(pdvstTransferData));
+    pdvstTransferFileMap = mmap(NULL, sizeof(pdvstTransferData), 
+                                PROT_READ | PROT_WRITE, MAP_SHARED, 
+                                fd, 0);
+    //close(fd);
+    pdvstData = (pdvstTransferData *)pdvstTransferFileMap;
+        
+    #endif
+    int i;
     pdvstData->active = 1;
     pdvstData->blockSize = PDBLKSIZE;
     pdvstData->nChannels = nChannels;
@@ -336,12 +364,42 @@ void pdvst::startPd()
         strcpy(debugString, " -nogui");
     }
     
+    #if _WIN32 //Windows 
+    while(1)
+    {
+        sprintf(commandLineArgs, "%s\\bin\\pd.exe", globalPureDataPath);
+        if( access( commandLineArgs, F_OK ) != -1 )
+            break;
+   
+        sprintf(commandLineArgs, "%s..\\.pd\\bin\\pd.exe", globalPluginPath);
+        if( access( commandLineArgs, F_OK ) != -1 )
+            break;
+        sprintf(errorMessage,"pd program not found. Check your settings in \n%s%s.pdv \n setup file. (search for the line PDPATH)",
+                              globalPluginPath,globalPluginName);
+            break;
+    }
+
+    while(1)
+    {
+        sprintf(commandLineArgs, "%s/bin/pd.exe", globalPureDataPath);
+        if( access( commandLineArgs, F_OK ) != -1 )
+            break;
+   
+        sprintf(commandLineArgs, "%s../.pd/bin/pd.exe", globalPluginPath);
+        if( access( commandLineArgs, F_OK ) != -1 )
+            break;
+        sprintf(errorMessage,"pd program not found. Check your settings in \n%s%s.pdv \n setup file. (search for the line PDPATH)",
+                              globalPluginPath,globalPluginName);
+            break;
+    }
     
     
+    #endif 
+
+
 
     
-    
-    
+    #if 0 // all this code will be deleted
     
     if (strcmp(globalPureDataPath, "") == 0)  // unspecified puredata path. Defaults to globalHostPdvstPath
         {
@@ -388,7 +446,7 @@ void pdvst::startPd()
             if (stat(pathToCheck, &statbuf) < 0)
                 // if failed, use defaults
                 sprintf(commandLineArgs, "\"%s\\pd\\bin\\pd.exe\"", pluginPath);*/
-
+    #endif
 
     sprintf(commandLineArgs,
             "%s%s",
@@ -402,7 +460,11 @@ void pdvst::startPd()
             commandLineArgs,
             vstProcEventName,
             pdProcEventName,
-            GetCurrentProcessId(),
+            #if _WIN32
+                GetCurrentProcessId(),
+            #else
+                getpid()
+            #endif
             pdvstTransferMutexName,
             pdvstTransferFileMapName);
     sprintf(commandLineArgs,
@@ -433,6 +495,10 @@ void pdvst::startPd()
     }
     debugLog("command line: %s", commandLineArgs);
     suspend();
+    
+
+    
+    #if _WIN32
     CreateProcess(NULL,
                   commandLineArgs,
                   NULL,
@@ -443,6 +509,10 @@ void pdvst::startPd()
                   NULL,
                   &si,
                   &pi);
+                  
+    #else
+        system(commandLineArgs);
+    #endif
 }
 
 void pdvst::sendGuiAction(int action)

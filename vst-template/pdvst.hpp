@@ -161,7 +161,7 @@ protected:
             vstProcEvent,
             pdProcEvent;
 #else
-    FD      pdvstTransferFileMap;
+    char    *pdvstTransferFileMap;
     sem_t   pdvstTransferMutex,
             vstProcEvent,
             pdProcEvent;    

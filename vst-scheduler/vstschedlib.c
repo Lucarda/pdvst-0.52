@@ -25,6 +25,8 @@
 #else
     #include <unistd.h>
     #include <semaphore.h>
+    #include <fcntl.h>
+    #include <sys/mman.h>
 #endif
 #include <stdio.h>
 #include "m_pd.h"
@@ -109,11 +111,18 @@ char *pdvstTransferMutexName,
      
 pdvstTransferData *pdvstData;
      
-HANDLE vstHostProcess,
-       pdvstTransferMutex,
-       pdvstTransferFileMap,
-       vstProcEvent,
-       pdProcEvent;
+#if _WIN32    
+    HANDLE  pdvstTransferMutex,
+            pdvstTransferFileMap,
+            vstProcEvent,
+            pdProcEvent,
+            vstHostProcess;
+#else
+    char    *pdvstTransferFileMap;
+    sem_t   pdvstTransferMutex,
+            vstProcEvent,
+            pdProcEvent;    
+#endif
        
 pdvstTimeInfo  timeInfo;
 
@@ -163,6 +172,7 @@ void parseArgs(int argc, char **argv)
     {
         if (strcmp(*argv, "-vsthostid") == 0)
         {
+            #ifdef _WIN32
             vstHostProcessId = atoi(argv[1]);
             vstHostProcess = OpenProcess(PROCESS_ALL_ACCESS,
                                          FALSE,
@@ -171,6 +181,18 @@ void parseArgs(int argc, char **argv)
             {
                 exit(1);
             }
+            #else
+            vstHostProcessId = atoi(argv[1]);
+
+
+            if (kill(vstHostProcessId, 0) == -1) 
+            {
+                // Process doesn't exist or we don't have permission
+                exit(1);
+            }
+
+  
+            #endif
             argc -= 2;
             argv += 2;
         }
@@ -822,11 +844,19 @@ int scheduler()
             scheduler_tick();
             pdvst_sleep(blockTime);
         }
+        #ifdef _WIN32
         GetExitCodeProcess(vstHostProcess, &vstHostProcessStatus);
         if (vstHostProcessStatus != STILL_ACTIVE)
         {
             active = 0;
         }
+        #else
+
+        if (kill(vstHostProcessId, 0) == -1) 
+        {
+            active = 0;
+        }
+        #endif            
     }
     return 1;
 }
@@ -851,6 +881,7 @@ int pd_extern_sched(char *flags)
     }
     argc = tokenizeCommandLineString(flags, argv);
     parseArgs(argc, argv);
+    #ifdef _WIN32
     pdvstTransferMutex = OpenMutex(MUTEX_ALL_ACCESS, 0, pdvstTransferMutexName);
     vstProcEvent = OpenEvent(EVENT_ALL_ACCESS, 0, vstProcEventName);
     pdProcEvent = OpenEvent(EVENT_ALL_ACCESS, 0, pdProcEventName);
@@ -862,18 +893,38 @@ int pd_extern_sched(char *flags)
                                                    0,
                                                    0,
                                                    sizeof(pdvstTransferData));
+    #else
+    pdvstTransferMutex = sem_open(pdvstTransferMutexName, O_CREAT, 0666, 1); 
+    pdvstTransferMutex = sem_open(vstProcEventName, O_CREAT, 0666, 1);
+    pdvstTransferMutex = sem_open(pdProcEventName, O_CREAT, 0666, 1);
+    fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);
+    ftruncate(fd, sizeof(pdvstTransferData));
+    pdvstTransferFileMap = mmap(NULL, sizeof(pdvstTransferData), 
+                                PROT_READ | PROT_WRITE, MAP_SHARED, 
+                                fd, 0);
+    //close(fd);
+    pdvstData = (pdvstTransferData *)pdvstTransferFileMap;
+    #endif
     xxWaitForSingleObject(pdvstTransferMutex, INFINITE);
 //l *(get_sys_schedadvance()) = *(get_sys_main_advance()) * 1000;
 //l post("Hello, appel sys_setchsr dans _main. Version 64");
+    post("Hello, pdvst2");
     sys_setchsr(pdvstData->nChannels,
                 pdvstData->nChannels,
                 pdvstData->sampleRate);
     xxReleaseMutex(pdvstTransferMutex);
     //timeBeginPeriod(1);
     scheduler();
-    UnmapViewOfFile(pdvstData);
-    CloseHandle(pdvstTransferFileMap);
-    CloseHandle(pdvstTransferMutex);
+    #ifdef _WIN32
+        CloseHandle(pdvstTransferMutex);
+        UnmapViewOfFile(pdvstTransferFileMap);
+        CloseHandle(pdvstTransferFileMap);
+    #else
+        sem_close(pdvstTransferMutexName);
+        sem_unlink(pdvstTransferMutexName);
+        munmap(pdvstTransferFileMap, sizeof(pdvstTransferData));
+        close(fd);
+    #endif
     for (i = 0; i < MAXARGS; i++)
     {
         free(argv[i]);

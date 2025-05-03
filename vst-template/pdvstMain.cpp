@@ -434,7 +434,7 @@ void parseSetupFile()
 
     } 
     if (setupFile) fclose(setupFile);
-#if 0    
+#if 1    
     // vstmain debug file
     FILE *file_pointer;
     file_pointer = fopen("vstMainDebug.txt", "w");
@@ -442,6 +442,7 @@ void parseSetupFile()
     fprintf(file_pointer, "vstDataPath: %s\n", vstDataPath);
     fprintf(file_pointer, "vstSetupFileName: %s\n", vstSetupFileName);
     fprintf(file_pointer, "globalPluginPath: %s\n", globalPluginPath);
+    fprintf(file_pointer, "globalPureDataPath: %s\n", globalPureDataPath);
     fclose(file_pointer);    
 #endif    
 }
