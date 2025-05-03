@@ -22,8 +22,12 @@
 
 #include "pdvst.hpp"
 #include <malloc.h>
-#include <process.h>
-#include <windows.h>
+#if _WIN32
+    #include <process.h>
+    #include <windows.h>
+#else
+    #include <semaphore.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
@@ -98,10 +102,19 @@ bool fexists(const char *filename)
 }
 
 */
+
 #if _WIN32
     int xxWaitForSingleObject(HANDLE mutex, int ms);
     int xxReleaseMutex(HANDLE mutex);
+    void xxSetEvent(HANDLE mutex);
+    void xxResetEvent(HANDLE mutex);
+#else
+    int xxWaitForSingleObject(sem_t mutex, int ms);
+    int xxReleaseMutex(sem_t mutex);
+    void xxSetEvent(sem_t mutex);
+    void xxResetEvent(sem_t mutex)
 #endif
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -434,38 +447,38 @@ void pdvst::startPd()
 
 void pdvst::sendGuiAction(int action)
 {
-    WaitForSingleObject(pdvstTransferMutex, 10);
+    xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
         pdvstData->guiState.direction = PD_RECEIVE;
         pdvstData->guiState.type = FLOAT_TYPE;
         pdvstData->guiState.value.floatData = (float)action;
         pdvstData->guiState.updated = 1;
-        ReleaseMutex(pdvstTransferMutex);
+        xxReleaseMutex(pdvstTransferMutex);
     }
 }
 
 void pdvst::sendPlugName(char * pName )     // pour envoyer le nom du plugin à puredata
 {
-    WaitForSingleObject(pdvstTransferMutex, 10);
+    xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
         pdvstData->plugName.direction = PD_RECEIVE;
         pdvstData->plugName.type = STRING_TYPE;
         strcpy(pdvstData->plugName.value.stringData,pName);
         pdvstData->plugName.updated = 1;
-        ReleaseMutex(pdvstTransferMutex);
+        xxReleaseMutex(pdvstTransferMutex);
     }
 }
 
 void pdvst::setSyncToVst(int value)
 {
-    //if (WaitForSingleObject(pdvstTransferMutex, 10)==WAIT_OBJECT_0)
-    WaitForSingleObject(pdvstTransferMutex, 10);
+    //if (xxWaitForSingleObject(pdvstTransferMutex, 10)==WAIT_OBJECT_0)
+    xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
         if (pdvstData->syncToVst != value)
         {
             pdvstData->syncToVst = value;
         }
-        ReleaseMutex(pdvstTransferMutex);
+        xxReleaseMutex(pdvstTransferMutex);
     }
 
 }
@@ -475,7 +488,7 @@ void pdvst::suspend()
     int i;
 
     setSyncToVst(0);
-    SetEvent(vstProcEvent);
+    xxSetEvent(vstProcEvent);
     for (i = 0; i < audioBuffer->nChannels; i++)
     {
         memset(audioBuffer->in[i], 0, audioBuffer->size * sizeof(float));
@@ -491,7 +504,7 @@ void pdvst::resume()
     int i;
 
     setSyncToVst(1);
-    SetEvent(vstProcEvent);
+    xxSetEvent(vstProcEvent);
     for (i = 0; i < audioBuffer->nChannels; i++)
     {
         memset(audioBuffer->in[i], 0, audioBuffer->size * sizeof(float));
@@ -509,7 +522,7 @@ void pdvst::resume()
 void pdvst::sendProgChange(VstInt32 prgm)
 {
 
-    WaitForSingleObject(pdvstTransferMutex, 10);
+    xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
         pdvstData->prognumber2pd.direction = PD_RECEIVE;
         pdvstData->prognumber2pd.type = FLOAT_TYPE;
@@ -521,7 +534,7 @@ void pdvst::sendProgChange(VstInt32 prgm)
         strcpy(pdvstData->progname2pd.value.stringData, program[prgm].name);
         pdvstData->progname2pd.updated = 1;
 
-        ReleaseMutex(pdvstTransferMutex);
+        xxReleaseMutex(pdvstTransferMutex);
     }
 }
 
@@ -644,11 +657,11 @@ VstInt32 pdvst::getChunk (void** data, bool isPreset)
     {
         Chunk->vstParam[i] = vstParam[i];
     }    
-    WaitForSingleObject(pdvstTransferMutex, 10);
+    xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
         memset(&Chunk->Data, '\0', MAXSTRLEN);
         strcpy (Chunk->Data, pdvstData->datachunk.value.stringData);
-        ReleaseMutex(pdvstTransferMutex);
+        xxReleaseMutex(pdvstTransferMutex);
     }        
         
     debugLog("luc:debug-size-of-chunk %d", sizeof(*Chunk));
@@ -662,7 +675,7 @@ VstInt32 pdvst::setChunk (void* data, VstInt32 byteSize, bool isPreset)
     if(byteSize)
     {        
         Chunk = (pdvstProgramAreChunks*)data;       
-        WaitForSingleObject(pdvstTransferMutex, 10);
+        xxWaitForSingleObject(pdvstTransferMutex, 10);
         {
             pdvstData->datachunk.direction = PD_RECEIVE;
             pdvstData->datachunk.type = STRING_TYPE;
@@ -679,7 +692,7 @@ VstInt32 pdvst::setChunk (void* data, VstInt32 byteSize, bool isPreset)
                 pdvstData->vstParameters[i].updated = 1;
             }  
             
-            ReleaseMutex(pdvstTransferMutex);
+            xxReleaseMutex(pdvstTransferMutex);
         }
     }
     
@@ -713,8 +726,8 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
 {
    #ifdef VSTMIDIOUTENABLE
 
-    //if (WaitForSingleObject(pdvstTransferMutex, 10)==WAIT_OBJECT_0)
-    WaitForSingleObject(pdvstTransferMutex, 10);
+    //if (xxWaitForSingleObject(pdvstTransferMutex, 10)==WAIT_OBJECT_0)
+    xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
         if (pdvstData->midiOutQueueUpdated)
         {
@@ -753,7 +766,7 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
 
         }
 
-      ReleaseMutex(pdvstTransferMutex);
+      xxReleaseMutex(pdvstTransferMutex);
     }
 
     #endif // VSTMIDIOUTENABLE
@@ -773,8 +786,8 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
 
       if(infos)
         {
-            //if (WaitForSingleObject(pdvstTransferMutex, 10)==WAIT_OBJECT_0)
-            WaitForSingleObject(pdvstTransferMutex, 10);
+            //if (xxWaitForSingleObject(pdvstTransferMutex, 10)==WAIT_OBJECT_0)
+            xxWaitForSingleObject(pdvstTransferMutex, 10);
             {
 
                 pdvstData->hostTimeInfo.updated=1;
@@ -794,7 +807,7 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
                 pdvstData->hostTimeInfo.samplesToNextClock=(int)infos->samplesToNextClock;	///< MIDI Clock Resolution (24 Per Quarter Note), can be negative (nearest clock)
                 pdvstData->hostTimeInfo.flags=(int)infos->flags;
 
-                ReleaseMutex(pdvstTransferMutex);
+                xxReleaseMutex(pdvstTransferMutex);
             }
         }
 
@@ -825,14 +838,14 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
             updatePdvstParameters();
             // wait for pd process event
             //   { JYG
-            int gotPdProcEvent = (WaitForSingleObject(pdProcEvent, 10)==WAIT_OBJECT_0);
-           // WaitForSingleObject(pdProcEvent,100);
-            //WaitForSingleObject(pdProcEvent, 10000);
+            int gotPdProcEvent = (xxWaitForSingleObject(pdProcEvent, 10) == 1); //WAIT_OBJECT_0
+           // xxWaitForSingleObject(pdProcEvent,100);
+            //xxWaitForSingleObject(pdProcEvent, 10000);
             // JYG: 10000 était une valeur trop élevée qui faisait planter ableton live
             // JYG }
             if (gotPdProcEvent)
                 {
-                    ResetEvent(pdProcEvent);
+                    xxResetEvent(pdProcEvent);
                     syncDefeatNumber=0;
                 }
             else if (syncDefeatNumber==50)
@@ -869,7 +882,7 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
             }
             pdvstData->sampleRate = (int)getSampleRate();
             // signal vst process event
-            SetEvent(vstProcEvent);
+            xxSetEvent(vstProcEvent);
         }
     }
     // output pd processed samples
@@ -912,7 +925,7 @@ VstInt32 pdvst::processEvents(VstEvents* ev)
     long statusType;
     long statusChannel;
 
-    WaitForSingleObject(pdvstTransferMutex, 10);
+    xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
         for (long i = 0; i < ev->numEvents; i++)
         {
@@ -978,7 +991,7 @@ VstInt32 pdvst::processEvents(VstEvents* ev)
             event++;
         }
         pdvstData->midiQueueUpdated = 1;
-        ReleaseMutex(pdvstTransferMutex);
+        xxReleaseMutex(pdvstTransferMutex);
         return 1;
     }
     return 0;
@@ -987,7 +1000,7 @@ VstInt32 pdvst::processEvents(VstEvents* ev)
 void pdvst::updatePdvstParameters()
 {
     int i;
-    WaitForSingleObject(pdvstTransferMutex, 10);
+    xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
         for (i = 0; i < pdvstData->nParameters; i++)
         {
@@ -1034,7 +1047,7 @@ void pdvst::updatePdvstParameters()
             }
         }
 
-        ReleaseMutex(pdvstTransferMutex);
+        xxReleaseMutex(pdvstTransferMutex);
     }
 
 }

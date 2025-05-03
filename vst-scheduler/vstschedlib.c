@@ -24,8 +24,8 @@
     #include <io.h>
 #else
     #include <unistd.h>
+    #include <semaphore.h>
 #endif
-
 #include <stdio.h>
 #include "m_pd.h"
 #include "s_stuff.h"
@@ -60,6 +60,18 @@
     int msw_nmidiout=0;
 
 #endif // VSTMIDIOUTENABLE
+
+#if _WIN32
+    int xxWaitForSingleObject(HANDLE mutex, int ms);
+    int xxReleaseMutex(HANDLE mutex);
+    void xxSetEvent(HANDLE mutex);
+    void xxResetEvent(HANDLE mutex);
+#else
+    int xxWaitForSingleObject(sem_t mutex, int ms);
+    int xxReleaseMutex(sem_t mutex);
+    void xxSetEvent(sem_t mutex);
+    void xxResetEvent(sem_t mutex)
+#endif
 
 
 typedef struct _vstParameterReceiver
@@ -294,12 +306,12 @@ void sendPdVstFloatParameter(t_vstParameterReceiver *x, t_float floatValue)
     int index;
 
     index = atoi(x->x_sym->s_name + strlen("svstParameter"));
-    WaitForSingleObject(pdvstTransferMutex, INFINITE);
+    xxWaitForSingleObject(pdvstTransferMutex, INFINITE);
     pdvstData->vstParameters[index].type = FLOAT_TYPE;
     pdvstData->vstParameters[index].direction = PD_SEND;
     pdvstData->vstParameters[index].updated = 1;
     pdvstData->vstParameters[index].value.floatData = floatValue;
-    ReleaseMutex(pdvstTransferMutex);
+    xxReleaseMutex(pdvstTransferMutex);
 }
 
 /*send data chunk to host*/
@@ -316,26 +328,26 @@ void sendPdVstChunk(t_vstChunkReceiver *x, t_symbol *s, int argc, t_atom *argv)
     binbuf_gettext(bbuf, &buf, &length);
     binbuf_free(bbuf);
   
-    WaitForSingleObject(pdvstTransferMutex, INFINITE);
+    xxWaitForSingleObject(pdvstTransferMutex, INFINITE);
     memset(&pdvstData->datachunk.value.stringData, '\0', MAXSTRINGSIZE);
     pdvstData->datachunk.type = STRING_TYPE;
     pdvstData->datachunk.direction = PD_SEND;
     pdvstData->datachunk.updated = 1;
     //strcpy(pdvstData->datachunk.value.stringData,buf);
     memcpy(pdvstData->datachunk.value.stringData, buf, length);
-    ReleaseMutex(pdvstTransferMutex);
+    xxReleaseMutex(pdvstTransferMutex);
     
     freebytes(buf, length+1);
 }
 
 void sendPdVstGuiName(t_vstGuiNameReceiver *x, t_symbol *symbolValue)
 {
-    WaitForSingleObject(pdvstTransferMutex, INFINITE);
+    xxWaitForSingleObject(pdvstTransferMutex, INFINITE);
     pdvstData->guiName.type = STRING_TYPE;
     pdvstData->guiName.direction = PD_SEND;
     pdvstData->guiName.updated = 1;
     strcpy(pdvstData->guiName.value.stringData,symbolValue->s_name);
-    ReleaseMutex(pdvstTransferMutex);
+    xxReleaseMutex(pdvstTransferMutex);
 }
 
 void makePdvstParameterReceivers()
@@ -482,7 +494,7 @@ int scheduler()
     #endif // VSTMIDIOUTENABLE
     while (active)
     {
-        WaitForSingleObject(pdvstTransferMutex, INFINITE);
+        xxWaitForSingleObject(pdvstTransferMutex, INFINITE);
         active = pdvstData->active;
         // check sample rate
         if (pdvstData->sampleRate != (int)sys_getsr())
@@ -792,21 +804,21 @@ int scheduler()
         }
         if (pdvstData->syncToVst)
         {
-            ReleaseMutex(pdvstTransferMutex);
-            if (WaitForSingleObject(vstProcEvent, 1000) == WAIT_TIMEOUT)
+            xxReleaseMutex(pdvstTransferMutex);
+            if (xxWaitForSingleObject(vstProcEvent, 1000) == 0) //WAIT_TIMEOUT
             {
                 // we have probably lost sync by now (1 sec)
-                WaitForSingleObject(pdvstTransferMutex, 100);
+                xxWaitForSingleObject(pdvstTransferMutex, 100);
                 pdvstData->syncToVst = 0;
-                ReleaseMutex(pdvstTransferMutex);
+                xxReleaseMutex(pdvstTransferMutex);
             }
-            ResetEvent(vstProcEvent);
+            xxResetEvent(vstProcEvent);
             scheduler_tick();
-            SetEvent(pdProcEvent);
+            xxSetEvent(pdProcEvent);
         }
         else
         {
-            ReleaseMutex(pdvstTransferMutex);
+            xxReleaseMutex(pdvstTransferMutex);
             scheduler_tick();
             pdvst_sleep(blockTime);
         }
@@ -850,13 +862,13 @@ int pd_extern_sched(char *flags)
                                                    0,
                                                    0,
                                                    sizeof(pdvstTransferData));
-    WaitForSingleObject(pdvstTransferMutex, INFINITE);
+    xxWaitForSingleObject(pdvstTransferMutex, INFINITE);
 //l *(get_sys_schedadvance()) = *(get_sys_main_advance()) * 1000;
 //l post("Hello, appel sys_setchsr dans _main. Version 64");
     sys_setchsr(pdvstData->nChannels,
                 pdvstData->nChannels,
                 pdvstData->sampleRate);
-    ReleaseMutex(pdvstTransferMutex);
+    xxReleaseMutex(pdvstTransferMutex);
     //timeBeginPeriod(1);
     scheduler();
     UnmapViewOfFile(pdvstData);

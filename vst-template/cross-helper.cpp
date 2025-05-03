@@ -7,12 +7,21 @@
 #include <semaphore.h>
 #endif
 
+
+
 #if _WIN32
 
 int xxWaitForSingleObject(HANDLE mutex, int ms)
 {
-    WaitForSingleObject(mutex, ms);
-    return 0;
+    int ret;
+    ret = WaitForSingleObject(mutex, ms);
+    
+    if (ret == WAIT_TIMEOUT) 
+        return 0;
+    else if (ret == WAIT_OBJECT_0) 
+        return 1;
+    else
+        return(ret);   
 }
 
 #else
@@ -28,8 +37,8 @@ int xxWaitForSingleObject(sem_t mutex, int ms)
     ts.tv_nsec += (ms % 1000) * 1e6; // Nanoseconds
     
     int res = sem_timedwait(mutex, &ts);
-    if (res == 0)  return 1;
-    else return 0;
+    if (res == 0)  return 0;
+    else return 1;
 }
 #endif
 

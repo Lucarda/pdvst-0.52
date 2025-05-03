@@ -7,7 +7,7 @@ PDDIR="C:/Program Files/Pd"
 
 SOURCES= \
     vstschedlib.c \
-    ../vst-template/cross-helper.cpp \
+    cross-helper.c \
     $(empty)
 
 # Let (native or cross-) compiler report target triplet and isolate individual
@@ -46,5 +46,5 @@ win-build:
     -shared -L$(PDDIR)/bin -l:pd.dll -o vstschedlib.dll
 	strip vstschedlib.dll
 	#cp vstschedlib.dll ../build/pd-scheduler$(arch)/vstschedlib.dll
-	#cp vstschedlib.dll ../build/Release$(arch)/.pd/bin/vstschedlib.dll
+	cp vstschedlib.dll ../build/Release$(arch)/.pd/bin/vstschedlib.dll
 	#cp vstschedlib.dll ../build/Release$(arch)/vstschedlib.dll
