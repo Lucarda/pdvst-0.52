@@ -43,8 +43,9 @@
 #ifdef _MSC_VER
 #define stat _stat
 #endif
-
+#if _WIN32
 extern HINSTANCE hInstance;
+#endif
 extern bool globalDebug;
 extern int globalNChannels;
 extern int globalNPrograms;
@@ -196,6 +197,7 @@ pdvst::pdvst(audioMasterCallback audioMaster)
         debugLog("    %s", program[i].name);
     }
     // create editor
+    #if _Win32
     if (customGui)
     {
        editor = new pdvstEditor(this);
@@ -203,7 +205,7 @@ pdvst::pdvst(audioMasterCallback audioMaster)
         debugLog("   -has custom GUI-");
     }
     guiNameUpdated=false;
-
+    #endif
     #ifdef VSTMIDIOUTENABLE
     // initializing structures for midiout support
 
@@ -244,8 +246,10 @@ pdvst::pdvst(audioMasterCallback audioMaster)
     referenceCount++;
 
      //  {JYG   see pdvst::setProgram below for explanation
+    #if _WIN32
     timeFromStartup=GetTickCount();
     //  JYG  }
+    #endif
     programsAreChunks(globalProgramsAreChunks);
     sendPlugName(globalPluginName);
 }
@@ -261,10 +265,10 @@ pdvst::~pdvst()
         UnmapViewOfFile(pdvstTransferFileMap);
         CloseHandle(pdvstTransferFileMap);
     #else
-        sem_close(pdvstTransferMutexName);
+        sem_close((sem_t*)pdvstTransferMutexName);
         sem_unlink(pdvstTransferMutexName);
         munmap(pdvstTransferFileMap, sizeof(pdvstTransferData));
-        close(fd);
+        //close(fd);
     #endif
     for (i = 0; i < MAXPARAMETERS; i++)
         delete vstParamName[i];
@@ -334,7 +338,7 @@ void pdvst::startPd()
     pdProcEvent = sem_open(pdProcEventName, O_CREAT, 0666, 0);
     fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);
     ftruncate(fd, sizeof(pdvstTransferData));
-    pdvstTransferFileMap = mmap(NULL, sizeof(pdvstTransferData), 
+    pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData), 
                                 PROT_READ | PROT_WRITE, MAP_SHARED, 
                                 fd, 0);
     //close(fd);
@@ -463,7 +467,7 @@ void pdvst::startPd()
             #if _WIN32
                 GetCurrentProcessId(),
             #else
-                getpid()
+                getpid(),
             #endif
             pdvstTransferMutexName,
             pdvstTransferFileMapName);
@@ -623,9 +627,12 @@ void pdvst::setProgram(VstInt32 prgmNum)
            // sprintf(errorMessage,"GetTickCount=%d\ntimeFromStartup=%d",
              //       GetTickCount(),timeFromStartup);
             //MessageBox(NULL, errorMessage,"setProgram",MB_OK);
+            
+            #if _WIN32
             if ((GetTickCount()-timeFromStartup) < 1000)
                 return;
             else
+            #else
             {
                for (i = 0; i < nParameters; i++)
                 {
@@ -633,6 +640,7 @@ void pdvst::setProgram(VstInt32 prgmNum)
                   //  MessageBox(NULL,"setvalue","setProgram",MB_OK);
                 }
             }
+            #endif
    }
 
 }
@@ -651,7 +659,10 @@ void pdvst::getProgramName(char *name)
 {
     strcpy(name, program[curProgram].name);
         //  {JYG   see pdvst::setProgram below for explanation
+    
+    #if _WIN32
     timeFromStartup=GetTickCount();
+    #endif
     //  JYG  }
 }
 
@@ -786,11 +797,12 @@ VstInt32 pdvst::canDo(char* text)
 	return -1;
 }
 
-
+#if _WIN32
 DWORD WINAPI NotifySyncError(LPVOID lpParam) {
     MessageBoxA(NULL, "Le processus PureData met du temps à répondre", "PdVST", MB_OK);
     return 0;
 }
+#endif
 
 void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrames)
 {

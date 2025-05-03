@@ -28,8 +28,8 @@ int xxWaitForSingleObject(HANDLE mutex, int ms)
     
 int xxWaitForSingleObject(sem_t mutex, int ms)
 {    
-    if (ms == -1) ms = 30000
-    
+    if (ms == -1) ms = 30000;
+    sem_t *mutex = (sem_t) mutex
     //http://www.csc.villanova.edu/~mdamian/threads/posixsem.html
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);

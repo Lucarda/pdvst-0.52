@@ -156,15 +156,16 @@ protected:
     bool isASynth;
     bool dspActive;
 #if _WIN32    
-    HANDLE  pdvstTransferMutex,
+
+	HANDLE	pdvstTransferMutex,
             pdvstTransferFileMap,
             vstProcEvent,
             pdProcEvent;
 #else
     char    *pdvstTransferFileMap;
-    sem_t   pdvstTransferMutex,
-            vstProcEvent,
-            pdProcEvent;    
+    sem_t   *pdvstTransferMutex,
+            *vstProcEvent,
+            *pdProcEvent;    
 #endif              
     pdvstTransferData *pdvstData;
     char pdvstTransferMutexName[1024];

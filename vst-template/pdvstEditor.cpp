@@ -27,8 +27,11 @@
 #endif
 
 #include <stdio.h>
+#if _WIN32
 #include <windows.h>
+#endif
 
+#ifdef _WIN32
 extern HINSTANCE hInstance;
 //extern int pdGuiWindowHeight, pdGuiWindowWidth;
 int useCount = 0;
@@ -215,3 +218,4 @@ LONG WINAPI pdvstEditor::windowProc(HWND hwnd, UINT message,
     }
 }
 // ***********
+#endif

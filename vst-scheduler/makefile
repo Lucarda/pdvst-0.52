@@ -43,3 +43,8 @@ win-build:
 	#cp vstschedlib.dll ../build/pd-scheduler$(arch)/vstschedlib.dll
 	cp vstschedlib.dll ../build/.pd/bin/vstschedlib.dll
 	#cp vstschedlib.dll ../build/Release$(arch)/vstschedlib.dll
+	
+linux-build:
+	g++ -Wall -I. -I$(FOO) -I$(FOO2) \
+	$(SOURCES) -D__cdecl="" -fPIC -std=c++11 -shared -ldl -o dummy-template.so
+	strip dummy-template.so

@@ -16,7 +16,7 @@ SOURCES= \
     pdvst.cpp \
     pdvstMain.cpp \
     pdvstEditor.cpp \
-    $(FOO2)AudioEffect.cpp \
+    $(FOO2)audioeffect.cpp \
     $(FOO2)audioeffectx.cpp \
     cross-helper.cpp \
     $(empty)
@@ -33,6 +33,7 @@ target.triplet := $(subst -, ,$(shell $(CC) -dumpmachine))
 
 ifneq ($(filter linux gnu% kfreebsd, $(target.triplet)),)
     system = Linux
+    all: linux-build
 endif
 
 ifneq ($(filter darwin%, $(target.triplet)),)
@@ -57,5 +58,9 @@ win-build:
 	cp pdvst-template.dll ../build/Pd_Midi.dll
 	cp pdvst-template.dll ../build/Pd_Chunks-test.dll
 
+linux-build:
+	g++ -Wall -I. -I$(FOO) -I$(FOO2) \
+	$(SOURCES) -D__cdecl="" -fPIC -std=c++11 -shared -ldl -lpthread -o dummy-template.so
+	strip dummy-template.so
 	
 	
