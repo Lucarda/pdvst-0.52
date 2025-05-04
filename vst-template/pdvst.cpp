@@ -112,10 +112,10 @@ bool fexists(const char *filename)
     void xxSetEvent(HANDLE mutex);
     void xxResetEvent(HANDLE mutex);
 #else
-    int xxWaitForSingleObject(sem_t mutex, int ms);
-    int xxReleaseMutex(sem_t mutex);
-    void xxSetEvent(sem_t mutex);
-    void xxResetEvent(sem_t mutex);
+    int xxWaitForSingleObject(sem_t *mutex, int ms);
+    int xxReleaseMutex(sem_t *mutex);
+    void xxSetEvent(sem_t *mutex);
+    void xxResetEvent(sem_t *mutex);
     int fd;
 #endif
 
