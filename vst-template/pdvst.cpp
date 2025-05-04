@@ -300,7 +300,9 @@ void pdvst::startPd()
     
 
     char commandLineArgs[MAXSTRLEN],
-         debugString[MAXSTRLEN],pathToCheck[MAXSTRLEN];
+         debugString[MAXSTRLEN],
+         pathToCheck[MAXSTRLEN],
+         schedulerPath[MAXSTRLEN];
 
     #if _WIN32 //Windows
     
@@ -382,16 +384,23 @@ void pdvst::startPd()
                               globalPluginPath,globalPluginName);
             break;
     }
+    #else
 
     while(1)
     {
-        sprintf(commandLineArgs, "%s/bin/pd.exe", globalPureDataPath);
+        sprintf(commandLineArgs, "%s/bin/pd", globalPureDataPath);
         if( access( commandLineArgs, F_OK ) != -1 )
+        {
+			sprintf(schedulerPath, "%s/bin", globalPureDataPath);
             break;
+		}
    
-        sprintf(commandLineArgs, "%s../.pd/bin/pd.exe", globalPluginPath);
+        sprintf(commandLineArgs, "%s../.pd/bin/pd", globalPluginPath);
         if( access( commandLineArgs, F_OK ) != -1 )
+        {
+			sprintf(schedulerPath, "%s../.pd/bin", globalPluginPath);    
             break;
+		}
         sprintf(errorMessage,"pd program not found. Check your settings in \n%s%s.pdv \n setup file. (search for the line PDPATH)",
                               globalPluginPath,globalPluginName);
             break;
@@ -456,9 +465,15 @@ void pdvst::startPd()
             "%s%s",
             commandLineArgs,
             debugString);
+    #if _WIN32
     sprintf(commandLineArgs,
             "%s -schedlib vstschedlib",
             commandLineArgs);
+    #else
+        sprintf(commandLineArgs,
+            "%s -schedlib %s/vstschedlib",
+            commandLineArgs, schedulerPath);
+    #endif
     sprintf(commandLineArgs,
             "%s -extraflags \"-vstproceventname %s -pdproceventname %s -vsthostid %d -mutexname %s -filemapname %s\"",
             commandLineArgs,
@@ -632,7 +647,6 @@ void pdvst::setProgram(VstInt32 prgmNum)
             if ((GetTickCount()-timeFromStartup) < 1000)
                 return;
             else
-            #else
             {
                for (i = 0; i < nParameters; i++)
                 {
@@ -640,6 +654,11 @@ void pdvst::setProgram(VstInt32 prgmNum)
                   //  MessageBox(NULL,"setvalue","setProgram",MB_OK);
                 }
             }
+            #else
+            for (i = 0; i < nParameters; i++)
+                {
+                    setParameter(i, program[curProgram].paramValue[i]);
+                }    
             #endif
    }
 

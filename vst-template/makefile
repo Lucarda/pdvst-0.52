@@ -47,7 +47,6 @@ endif
 
 
 win-build:
-	@echo $(arch)
 	g++ -Wall -I. -I$(FOO) -I$(FOO2) \
 	$(SOURCES) -static-libgcc -static-libstdc++ -static -lpthread -shared -o pdvst-template.dll
 	strip pdvst-template.dll
@@ -60,7 +59,10 @@ win-build:
 
 linux-build:
 	g++ -Wall -I. -I$(FOO) -I$(FOO2) \
-	$(SOURCES) -D__cdecl="" -fPIC -std=c++11 -shared -ldl -lpthread -o dummy-template.so
-	strip dummy-template.so
-	
-	
+	$(SOURCES) -D__cdecl="" -fPIC -std=c++11 -shared -ldl -lpthread -o pdvst-template.so
+	strip pdvst-template.so
+	cp pdvst-template.so ../build/Pd_Gain.so
+	#cp pdvst-template.so ../build/Pd_Gain-gui.so
+	#cp pdvst-template.so ../build/Pd_Gain-nogui.so
+	#cp pdvst-template.so ../build/Pd_Midi.so
+	#cp pdvst-template.so ../build/Pd_Chunks-test.so

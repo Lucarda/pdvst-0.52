@@ -26,10 +26,9 @@ int xxWaitForSingleObject(HANDLE mutex, int ms)
 
 #else
     
-int xxWaitForSingleObject(sem_t mutex, int ms)
+int xxWaitForSingleObject(sem_t *mutex, int ms)
 {    
-    if (ms == -1) ms = 30000
-    
+    if (ms == -1) ms = 30000;
     //http://www.csc.villanova.edu/~mdamian/threads/posixsem.html
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
@@ -53,7 +52,7 @@ int xxReleaseMutex(HANDLE mutex)
 
 #else
     
-int xxReleaseMutex(sem_t mutex)
+int xxReleaseMutex(sem_t *mutex)
 {
     sem_post(mutex);
 }
@@ -69,7 +68,7 @@ void xxSetEvent(HANDLE mutex)
 
 #else
     
-void xxSetEvent(sem_t mutex)
+void xxSetEvent(sem_t *mutex)
 {
     //sem_post(mutex);
     
@@ -93,7 +92,7 @@ void xxResetEvent(HANDLE mutex)
 
 #else
     
-void xxResetEvent(sem_t mutex)
+void xxResetEvent(sem_t *mutex)
 {
     //sem_post(mutex);
     

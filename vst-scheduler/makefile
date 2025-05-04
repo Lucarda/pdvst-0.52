@@ -22,6 +22,7 @@ target.triplet := $(subst -, ,$(shell $(CC) -dumpmachine))
 
 ifneq ($(filter linux gnu% kfreebsd, $(target.triplet)),)
     system = Linux
+    all: linux-build
 endif
 
 ifneq ($(filter darwin%, $(target.triplet)),)
@@ -45,6 +46,9 @@ win-build:
 	#cp vstschedlib.dll ../build/Release$(arch)/vstschedlib.dll
 	
 linux-build:
-	g++ -Wall -I. -I$(FOO) -I$(FOO2) \
-	$(SOURCES) -D__cdecl="" -fPIC -std=c++11 -shared -ldl -o dummy-template.so
-	strip dummy-template.so
+	gcc -g -Wall -I$(PDDIR)/src -I../vst-template -I. \
+	$(SOURCES) -fPIC -shared -o vstschedlib.pd_linux 
+	#strip vstschedlib.pd_linux
+	chmod 775 vstschedlib.pd_linux
+	cp vstschedlib.pd_linux ../build/.pd/bin/vstschedlib.pd_linux
+

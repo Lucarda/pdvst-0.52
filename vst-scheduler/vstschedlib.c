@@ -27,11 +27,15 @@
     #include <semaphore.h>
     #include <fcntl.h>
     #include <sys/mman.h>
+    //#include <cstdlib>
+    #include <signal.h>
+    #include <stdlib.h>
 #endif
 #include <stdio.h>
 #include "m_pd.h"
 #include "s_stuff.h"
 #include "pdvstTransfer.h"
+//#include <cstring>
 #define MAXARGS 1024
 #define MAXSTRLEN 1024
 #define TIMEUNITPERSEC (32.*441000.)
@@ -39,6 +43,8 @@
 #define kVstTransportChanged      1
 #define	kVstTransportPlaying      2
 #define	kVstTransportRecording    8
+
+FILE *debugFile;
 
 #ifdef VSTMIDIOUTENABLE
     EXTERN int midi_outhead;
@@ -69,10 +75,11 @@
     void xxSetEvent(HANDLE mutex);
     void xxResetEvent(HANDLE mutex);
 #else
-    int xxWaitForSingleObject(sem_t mutex, int ms);
-    int xxReleaseMutex(sem_t mutex);
-    void xxSetEvent(sem_t mutex);
-    void xxResetEvent(sem_t mutex)
+    int xxWaitForSingleObject(sem_t *mutex, int ms);
+    int xxReleaseMutex(sem_t *mutex);
+    void xxSetEvent(sem_t *mutex);
+    void xxResetEvent(sem_t *mutex);
+    int fd;
 #endif
 
 
@@ -119,12 +126,27 @@ pdvstTransferData *pdvstData;
             vstHostProcess;
 #else
     char    *pdvstTransferFileMap;
-    sem_t   pdvstTransferMutex,
-            vstProcEvent,
-            pdProcEvent;    
+    sem_t   *pdvstTransferMutex,
+            *vstProcEvent,
+            *pdProcEvent;
+    pid_t   vstHostProcessId;   
 #endif
        
 pdvstTimeInfo  timeInfo;
+
+void debugLog(char *fmt, ...)
+{
+    va_list ap;
+
+    if (debugFile)
+    {
+        va_start(ap, fmt);
+        vfprintf(debugFile, fmt, ap);
+        va_end(ap);
+        putc('\n', debugFile);
+        fflush(debugFile);
+    }
+}
 
 void pdvst_sleep(int n) 
 {
@@ -166,7 +188,9 @@ int tokenizeCommandLineString(char *clString, char **tokens)
 
 void parseArgs(int argc, char **argv)
 {
+    #ifdef _WIN32
     int vstHostProcessId;
+    #endif
 
     while ((argc > 0) && (**argv == '-'))
     {
@@ -328,7 +352,7 @@ void sendPdVstFloatParameter(t_vstParameterReceiver *x, t_float floatValue)
     int index;
 
     index = atoi(x->x_sym->s_name + strlen("svstParameter"));
-    xxWaitForSingleObject(pdvstTransferMutex, INFINITE);
+    xxWaitForSingleObject(pdvstTransferMutex, -1);
     pdvstData->vstParameters[index].type = FLOAT_TYPE;
     pdvstData->vstParameters[index].direction = PD_SEND;
     pdvstData->vstParameters[index].updated = 1;
@@ -350,7 +374,7 @@ void sendPdVstChunk(t_vstChunkReceiver *x, t_symbol *s, int argc, t_atom *argv)
     binbuf_gettext(bbuf, &buf, &length);
     binbuf_free(bbuf);
   
-    xxWaitForSingleObject(pdvstTransferMutex, INFINITE);
+    xxWaitForSingleObject(pdvstTransferMutex, -1);
     memset(&pdvstData->datachunk.value.stringData, '\0', MAXSTRINGSIZE);
     pdvstData->datachunk.type = STRING_TYPE;
     pdvstData->datachunk.direction = PD_SEND;
@@ -364,7 +388,7 @@ void sendPdVstChunk(t_vstChunkReceiver *x, t_symbol *s, int argc, t_atom *argv)
 
 void sendPdVstGuiName(t_vstGuiNameReceiver *x, t_symbol *symbolValue)
 {
-    xxWaitForSingleObject(pdvstTransferMutex, INFINITE);
+    xxWaitForSingleObject(pdvstTransferMutex, -1);
     pdvstData->guiName.type = STRING_TYPE;
     pdvstData->guiName.direction = PD_SEND;
     pdvstData->guiName.updated = 1;
@@ -452,19 +476,18 @@ int HFClock()
 
 int scheduler()
 {
-    int i,
-        blockTime,
-
-        active = 1;
+    int i, blockTime, active = 1;
+     
+    #if _WIN32    
     DWORD vstHostProcessStatus = 0;
-
+    #endif
 
     vstParameterReceiver_class = class_new(gensym("vstParameterReceiver"),
                                            0,
                                            0,
                                            sizeof(t_vstParameterReceiver),
                                            0,
-                                           0);
+                                           (t_atomtype)0);
 
     class_addfloat(vstParameterReceiver_class, (t_method)sendPdVstFloatParameter);
     makePdvstParameterReceivers();
@@ -475,7 +498,7 @@ int scheduler()
                                            0,
                                            sizeof(t_vstChunkReceiver),
                                            0,
-                                           0);
+                                           (t_atomtype)0);
 
     class_addanything(vstChunkReceiver_class,(t_method)sendPdVstChunk);
     makevstChunkReceiver();
@@ -487,7 +510,7 @@ int scheduler()
                                            0,
                                            sizeof(t_vstGuiNameReceiver),
                                            0,
-                                           0);
+                                           (t_atomtype)0);
 
     class_addsymbol(vstGuiNameReceiver_class,(t_method)sendPdVstGuiName);
     makePdvstGuiNameReceiver();
@@ -516,7 +539,7 @@ int scheduler()
     #endif // VSTMIDIOUTENABLE
     while (active)
     {
-        xxWaitForSingleObject(pdvstTransferMutex, INFINITE);
+        xxWaitForSingleObject(pdvstTransferMutex, -1);
         active = pdvstData->active;
         // check sample rate
         if (pdvstData->sampleRate != (int)sys_getsr())
@@ -867,6 +890,12 @@ int pd_extern_sched(char *flags)
     char *argv[MAXARGS];
 //l sys_audioapi = API_NONE;
 
+	debugFile = fopen("pdvstschedulerdebug.txt", "wt");
+
+debugLog("lucarda: schedulermain");
+
+
+
 
     t_audiosettings as;
 
@@ -899,13 +928,13 @@ int pd_extern_sched(char *flags)
     pdvstTransferMutex = sem_open(pdProcEventName, O_CREAT, 0666, 1);
     fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);
     ftruncate(fd, sizeof(pdvstTransferData));
-    pdvstTransferFileMap = mmap(NULL, sizeof(pdvstTransferData), 
+    pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData), 
                                 PROT_READ | PROT_WRITE, MAP_SHARED, 
                                 fd, 0);
     //close(fd);
     pdvstData = (pdvstTransferData *)pdvstTransferFileMap;
     #endif
-    xxWaitForSingleObject(pdvstTransferMutex, INFINITE);
+    xxWaitForSingleObject(pdvstTransferMutex, -1);
 //l *(get_sys_schedadvance()) = *(get_sys_main_advance()) * 1000;
 //l post("Hello, appel sys_setchsr dans _main. Version 64");
     post("Hello, pdvst2");
