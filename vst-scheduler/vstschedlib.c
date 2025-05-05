@@ -35,7 +35,7 @@
 #include "m_pd.h"
 #include "s_stuff.h"
 #include "pdvstTransfer.h"
-//#include <cstring>
+#include <string.h>
 #define MAXARGS 1024
 #define MAXSTRLEN 1024
 #define TIMEUNITPERSEC (32.*441000.)
@@ -207,7 +207,7 @@ void parseArgs(int argc, char **argv)
             }
             #else
             vstHostProcessId = atoi(argv[1]);
-
+debugLog("lucarda: vsthostid: %d", vstHostProcessId );
 
             if (kill(vstHostProcessId, 0) == -1) 
             {
@@ -476,6 +476,10 @@ int HFClock()
 
 int scheduler()
 {
+    
+debugLog("lucarda: schedulerscheduler");
+
+    
     int i, blockTime, active = 1;
      
     #if _WIN32    
@@ -924,14 +928,14 @@ debugLog("lucarda: schedulermain");
                                                    sizeof(pdvstTransferData));
     #else
     pdvstTransferMutex = sem_open(pdvstTransferMutexName, O_CREAT, 0666, 1); 
-    pdvstTransferMutex = sem_open(vstProcEventName, O_CREAT, 0666, 1);
-    pdvstTransferMutex = sem_open(pdProcEventName, O_CREAT, 0666, 1);
+    vstProcEvent  = sem_open(vstProcEventName, O_CREAT, 0666, 0);
+    pdProcEvent = sem_open(pdProcEventName, O_CREAT, 0666, 0);
     fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);
     ftruncate(fd, sizeof(pdvstTransferData));
     pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData), 
                                 PROT_READ | PROT_WRITE, MAP_SHARED, 
                                 fd, 0);
-    //close(fd);
+    close(fd);
     pdvstData = (pdvstTransferData *)pdvstTransferFileMap;
     #endif
     xxWaitForSingleObject(pdvstTransferMutex, -1);
@@ -943,17 +947,29 @@ debugLog("lucarda: schedulermain");
                 pdvstData->sampleRate);
     xxReleaseMutex(pdvstTransferMutex);
     //timeBeginPeriod(1);
+    
+debugLog("lucarda: in of scheduler in main scheduler" );    
+    
+    
     scheduler();
+    
+//debugLog("lucarda: out of scheduler in main scheduler" );    
+
     #ifdef _WIN32
         CloseHandle(pdvstTransferMutex);
         UnmapViewOfFile(pdvstTransferFileMap);
         CloseHandle(pdvstTransferFileMap);
     #else
-        sem_close(pdvstTransferMutexName);
-        sem_unlink(pdvstTransferMutexName);
+debugLog("lucarda: out of scheduler in main scheduler" ); 
+        sem_close(pdvstTransferMutex);
+debugLog("lucarda: semclose" );
+        sem_unlink((char *)pdvstTransferMutex);
+debugLog("lucarda: semunlink" );
         munmap(pdvstTransferFileMap, sizeof(pdvstTransferData));
+debugLog("lucarda: unmap" );
         close(fd);
     #endif
+//debugLog("lucarda: close mutexs" );
     for (i = 0; i < MAXARGS; i++)
     {
         free(argv[i]);

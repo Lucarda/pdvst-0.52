@@ -30,12 +30,15 @@ int xxWaitForSingleObject(sem_t *mutex, int ms)
 {    
     if (ms == -1) ms = 30000;
     //http://www.csc.villanova.edu/~mdamian/threads/posixsem.html
+
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     ts.tv_sec += ms / 1000;          // Seconds
     ts.tv_nsec += (ms % 1000) * 1e6; // Nanoseconds
-    
+  
+    printf("sem_timedwait\n");
     int res = sem_timedwait(mutex, &ts);
+
     if (res == 0)  return 0;
     else return 1;
 }
@@ -54,7 +57,9 @@ int xxReleaseMutex(HANDLE mutex)
     
 int xxReleaseMutex(sem_t *mutex)
 {
+    printf("release mutex");
     sem_post(mutex);
+	return 0;
 }
 #endif
 

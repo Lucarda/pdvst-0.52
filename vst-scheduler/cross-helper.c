@@ -55,6 +55,7 @@ int xxReleaseMutex(HANDLE mutex)
 int xxReleaseMutex(sem_t *mutex)
 {
     sem_post(mutex);
+    return 0;
 }
 #endif
 

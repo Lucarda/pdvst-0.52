@@ -29,6 +29,7 @@
     #include <semaphore.h>
     #include <fcntl.h>
     #include <sys/mman.h>
+
 #endif
 #include <string.h>
 #include <stdlib.h>
@@ -258,6 +259,8 @@ pdvst::~pdvst()
 {
     int i;
 
+debugLog("pdvst::~pdvst()");
+
     referenceCount--;
     pdvstData->active = 0;
     #ifdef _WIN32
@@ -335,7 +338,7 @@ void pdvst::startPd()
     sprintf(pdvstTransferFileMapName, "/filemap%d%x", getpid(), this);
     sprintf(vstProcEventName, "/vstprocevent%d%x", getpid(), this);
     sprintf(pdProcEventName, "/pdprocevent%d%x", getpid(), this);
-    sem_open(pdvstTransferMutexName, O_CREAT, 0666, 1);
+    pdvstTransferMutex = sem_open(pdvstTransferMutexName, O_CREAT, 0666, 0);
     vstProcEvent = sem_open(vstProcEventName, O_CREAT, 0666, 1);  // Initial value 1 (TRUE)
     pdProcEvent = sem_open(pdProcEventName, O_CREAT, 0666, 0);
     fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);
@@ -343,7 +346,7 @@ void pdvst::startPd()
     pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData), 
                                 PROT_READ | PROT_WRITE, MAP_SHARED, 
                                 fd, 0);
-    //close(fd);
+    //close(fd); //checkout this. it should close but there's compiler error. why?
     pdvstData = (pdvstTransferData *)pdvstTransferFileMap;
         
     #endif
@@ -560,6 +563,7 @@ void pdvst::sendPlugName(char * pName )     // pour envoyer le nom du plugin à p
 
 void pdvst::setSyncToVst(int value)
 {
+debugLog("pdvst::setSyncToVst");
     //if (xxWaitForSingleObject(pdvstTransferMutex, 10)==WAIT_OBJECT_0)
     xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
@@ -575,9 +579,11 @@ void pdvst::setSyncToVst(int value)
 void pdvst::suspend()
 {
     int i;
-
+debugLog("pdvst::suspend()");
     setSyncToVst(0);
+debugLog("pdvst::suspend() 2");    
     xxSetEvent(vstProcEvent);
+debugLog("pdvst::suspend() 3");
     for (i = 0; i < audioBuffer->nChannels; i++)
     {
         memset(audioBuffer->in[i], 0, audioBuffer->size * sizeof(float));
@@ -586,12 +592,13 @@ void pdvst::suspend()
     audioBuffer->inFrameCount = audioBuffer->outFrameCount = 0;
     dspActive = false;
     setInitialDelay(PDBLKSIZE * 2);
+debugLog("pdvst::suspend() 4");
 }
 
 void pdvst::resume()
 {
     int i;
-
+debugLog("pdvst::resume()");
     setSyncToVst(1);
     xxSetEvent(vstProcEvent);
     for (i = 0; i < audioBuffer->nChannels; i++)
