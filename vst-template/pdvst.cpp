@@ -540,6 +540,7 @@ void pdvst::startPd()
     #else
         system(commandLineArgs);
     #endif
+    resume();
 }
 
 void pdvst::sendGuiAction(int action)
@@ -568,7 +569,7 @@ void pdvst::sendPlugName(char * pName )     // pour envoyer le nom du plugin à p
 
 void pdvst::setSyncToVst(int value)
 {
-debugLog("pdvst::setSyncToVst");
+
     //if (xxWaitForSingleObject(pdvstTransferMutex, 10)==WAIT_OBJECT_0)
     xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
@@ -576,6 +577,7 @@ debugLog("pdvst::setSyncToVst");
         {
             pdvstData->syncToVst = value;
         }
+debugLog("pdvst::setSyncToVst %d", value);
         xxReleaseMutex(pdvstTransferMutex);
     }
 

@@ -208,7 +208,7 @@ void parseArgs(int argc, char **argv)
             }
             #else
             vstHostProcessId = atoi(argv[1]);
-debugLog("lucarda: vsthostid: %d", vstHostProcessId );
+//debugLog("lucarda: vsthostid: %d", vstHostProcessId );
 
             if (kill(vstHostProcessId, 0) == -1) 
             {
@@ -544,6 +544,7 @@ debugLog("lucarda: schedulerscheduler");
     #endif // VSTMIDIOUTENABLE
     while (active)
     {
+//debugLog("lucarda: active premutex");
         xxWaitForSingleObject(pdvstTransferMutex, -1);
         active = pdvstData->active;
         // check sample rate
@@ -854,6 +855,8 @@ debugLog("lucarda: schedulerscheduler");
         }
         if (pdvstData->syncToVst)
         {
+            
+ //debugLog("lucarda: if (pdvstData->syncToVst)");           
             xxReleaseMutex(pdvstTransferMutex);
             if (xxWaitForSingleObject(vstProcEvent, 1000) == 0) //WAIT_TIMEOUT
             {
@@ -871,6 +874,7 @@ debugLog("lucarda: schedulerscheduler");
             xxReleaseMutex(pdvstTransferMutex);
             scheduler_tick();
             pdvst_sleep(blockTime);
+//debugLog("lucarda: if NOT (pdvstData->syncToVst)"); 
         }
         #ifdef _WIN32
         GetExitCodeProcess(vstHostProcess, &vstHostProcessStatus);
@@ -961,7 +965,7 @@ debugLog("lucarda: schedulermain");
     xxReleaseMutex(pdvstTransferMutex);
     //timeBeginPeriod(1);
     
-debugLog("lucarda: in of scheduler in main scheduler" );    
+//debugLog("lucarda: in of scheduler in main scheduler" );    
     
     
     scheduler();
