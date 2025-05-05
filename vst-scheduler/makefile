@@ -47,7 +47,8 @@ win-build:
 	
 linux-build:
 	gcc -g -Wall -I$(PDDIR)/src -I../vst-template -I. \
-	$(SOURCES) -fPIC -shared -o vstschedlib.pd_linux 
+	$(SOURCES) -fPIC -shared -lpthread -lc -o vstschedlib.pd_linux
+	#-ldl -lpthread -lc
 	#strip vstschedlib.pd_linux
 	chmod 775 vstschedlib.pd_linux
 	cp vstschedlib.pd_linux ../build/.pd/bin/vstschedlib.pd_linux

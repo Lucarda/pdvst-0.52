@@ -117,7 +117,7 @@ bool fexists(const char *filename)
     int xxReleaseMutex(sem_t *mutex);
     void xxSetEvent(sem_t *mutex);
     void xxResetEvent(sem_t *mutex);
-    int fd;
+    //int fd;
 #endif
 
 
@@ -297,7 +297,12 @@ void pdvst::debugLog(char *fmt, ...)
         fflush(debugFile);
     }
 }
-
+/*
+void pdvst::dummyclosefd(int df)
+{
+	close(df);
+}
+*/
 void pdvst::startPd()
 {
     
@@ -346,7 +351,7 @@ void pdvst::startPd()
     pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData), 
                                 PROT_READ | PROT_WRITE, MAP_SHARED, 
                                 fd, 0);
-    //close(fd); //checkout this. it should close but there's compiler error. why?
+    ::close(fd); //checkout this. it should close but there's compiler error. why?
     pdvstData = (pdvstTransferData *)pdvstTransferFileMap;
         
     #endif

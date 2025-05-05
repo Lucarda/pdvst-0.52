@@ -46,6 +46,7 @@
 
 #else
     #include <semaphore.h>
+    #include <unistd.h>
 #endif
 
 
@@ -156,7 +157,6 @@ protected:
     bool isASynth;
     bool dspActive;
 #if _WIN32    
-
 	HANDLE	pdvstTransferMutex,
             pdvstTransferFileMap,
             vstProcEvent,
@@ -165,7 +165,8 @@ protected:
     char    *pdvstTransferFileMap;
     sem_t   *pdvstTransferMutex,
             *vstProcEvent,
-            *pdProcEvent;    
+            *pdProcEvent; 
+    int     fd;  
 #endif              
     pdvstTransferData *pdvstData;
     char pdvstTransferMutexName[1024];

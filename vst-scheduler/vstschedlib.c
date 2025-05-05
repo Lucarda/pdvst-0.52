@@ -26,6 +26,7 @@
     #include <unistd.h>
     #include <semaphore.h>
     #include <fcntl.h>
+    #include <sys/stat.h>
     #include <sys/mman.h>
     //#include <cstdlib>
     #include <signal.h>
@@ -927,9 +928,21 @@ debugLog("lucarda: schedulermain");
                                                    0,
                                                    sizeof(pdvstTransferData));
     #else
-    pdvstTransferMutex = sem_open(pdvstTransferMutexName, O_CREAT, 0666, 1); 
+    pdvstTransferMutex = sem_open(pdvstTransferMutexName, O_CREAT, 0666, 1);
+
+    if (pdvstTransferMutex == SEM_FAILED)
+		debugLog("pdvstTransferMutex failed");
+
     vstProcEvent  = sem_open(vstProcEventName, O_CREAT, 0666, 0);
+	
+	if (vstProcEvent == SEM_FAILED)
+		debugLog("vstProcEvent failed");
+		
     pdProcEvent = sem_open(pdProcEventName, O_CREAT, 0666, 0);
+    
+    if (pdProcEvent == SEM_FAILED)
+		debugLog("pdProcEvent failed");
+		
     fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);
     ftruncate(fd, sizeof(pdvstTransferData));
     pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData), 

@@ -59,7 +59,7 @@ win-build:
 
 linux-build:
 	g++ -Wall -I. -I$(FOO) -I$(FOO2) \
-	$(SOURCES) -D__cdecl="" -fPIC -std=c++11 -shared -ldl -lpthread -o pdvst-template.so
+	$(SOURCES) -D__cdecl="" -fPIC -std=c++11 -shared -ldl -lpthread -lc -o pdvst-template.so
 	strip pdvst-template.so
 	cp pdvst-template.so ../build/Pd_Gain.so
 	#cp pdvst-template.so ../build/Pd_Gain-gui.so
