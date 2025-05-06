@@ -425,7 +425,7 @@ void pdvst::startPd()
                 externalLib[i]);
     }
     #ifndef _WIN32
-    sprintf(commandLineArgs,"%s%s",commandLineArgs, unixlastargs);
+    sprintf(commandLineArgs,"%s %s",commandLineArgs, unixlastargs);
     #endif
     debugLog("command line: %s", commandLineArgs);
     suspend();

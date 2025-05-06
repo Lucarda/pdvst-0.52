@@ -17,7 +17,7 @@
 **
 ** jsarlo@ucsd.edu
 */
-#if _WIN32 
+#if _WIN32
 #include <windows.h>
 #endif
 #include <math.h>
@@ -55,7 +55,7 @@ bool globalProgramsAreChunks = false;
 char *trimWhitespace(char *str);
 void parseSetupFile();
 
-// later 
+// later
 char unixname[MAXFILENAMELEN];
 
 #include "audioeffect.h"
@@ -66,23 +66,23 @@ extern AudioEffect* createEffectInstance (audioMasterCallback audioMaster);
 
 extern "C" {
 #if defined (__GNUC__) && ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1)))
-	#define VST_EXPORT	__attribute__ ((visibility ("default")))
+    #define VST_EXPORT  __attribute__ ((visibility ("default")))
 #else
-	#define VST_EXPORT
+    #define VST_EXPORT
 #endif
 
 VST_EXPORT AEffect *VSTPluginMain(audioMasterCallback audioMaster)
 {
-	// get vst version
-	if (!audioMaster(0, audioMasterVersion, 0, 0, 0, 0))
+    // get vst version
+    if (!audioMaster(0, audioMasterVersion, 0, 0, 0, 0))
         return 0;  // old version
 
     // Create the AudioEffect
-	AudioEffect* effect = createEffectInstance (audioMaster);
-	if (!effect)
-		return 0;
+    AudioEffect* effect = createEffectInstance (audioMaster);
+    if (!effect)
+        return 0;
 
-	return effect->getAeffect();
+    return effect->getAeffect();
 }
 
 // support for old hosts not looking for VSTPluginMain
@@ -96,17 +96,17 @@ VST_EXPORT AEffect* main_plugin (audioMasterCallback audioMaster) { return VSTPl
 } // extern "C"
 
 
-extern "C" {    
+extern "C" {
 #if _WIN32
 void* hInstance;
 BOOL WINAPI DllMain(HINSTANCE hInst, DWORD dwReason, LPVOID lpvReserved)
 {
     hInstance = hInst;
-    switch( dwReason ) 
-    { 
+    switch( dwReason )
+    {
         case DLL_PROCESS_ATTACH:
         // Initialize once for each new process.
-        // Return FALSE to fail DLL load.           
+        // Return FALSE to fail DLL load.
         parseSetupFile();
         break;
     }
@@ -116,17 +116,15 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD dwReason, LPVOID lpvReserved)
 #else
 
 __attribute__((constructor))
-void startup(void) 
+void startup(void)
 {
-	Dl_info dl_info;
-	dladdr((void *)startup, &dl_info);
-	strcpy(unixname, dl_info.dli_fname);	
+    Dl_info dl_info;
+    dladdr((void *)startup, &dl_info);
+    strcpy(unixname, dl_info.dli_fname);
     parseSetupFile();
-    return ;
 }
 #endif
 } // extern "C"
-
 
 char *trimWhitespace(char *str)
 {
@@ -152,31 +150,14 @@ char *trimWhitespace(char *str)
 }
 
 
-// see this
-
-// https://stackoverflow.com/questions/1642128/linux-how-to-get-full-name-of-shared-object-just-loaded-from-the-constructor
-
-// https://github.com/pure-data/pure-data/blob/20a2a59d6a2c428399899e94e47ebbd035d7d413/src/s_main.c#L646
-
-
-// https://stackoverflow.com/questions/7051844/how-to-find-the-full-path-of-the-c-linux-program-from-within
-
-// https://man7.org/linux/man-pages/man3/dlinfo.3.html
-
-
-// use this simple plug to debug all here (not building the rest of pdvst
-// https://github.com/AndrewBelt/HelloDAW/blob/master/VST2/HelloVST.cpp
-
-
-char *strlowercase(char *str) 
+char *strlowercase(char *str)
 {
-    for (int i = 0; str[i]; i++) 
+    for (int i = 0; str[i]; i++)
     {
         str[i] = tolower(str[i]);
     }
     return str;
 }
-
 
 void parseSetupFile()
 {
@@ -189,11 +170,11 @@ void parseSetupFile()
     char vstSetupFileName[MAXSTRLEN];
     int i, equalPos, progNum = -1;
 
-    #if _WIN32     // find filepaths (Windows) 
+    #if _WIN32     // find filepaths (Windows)
     #define DLL ".dll"
     GetModuleFileName((HMODULE)hInstance,
-					  (LPTSTR)tFileName,
-					  (DWORD)MAXFILENAMELEN);
+                      (LPTSTR)tFileName,
+                      (DWORD)MAXFILENAMELEN);
 
     if (strrchr(tFileName, '\\'))
     {
@@ -208,9 +189,9 @@ void parseSetupFile()
     {
 
         strcpy(vstDataPath, tFileName);
-		*(strrchr(vstDataPath, '\\') + 1) = 0;
-		sprintf(vstDataPath, "%s%s\\", vstDataPath,globalPluginName);
-		 // remove .dll extension (from globalPluginName)
+        *(strrchr(vstDataPath, '\\') + 1) = 0;
+        sprintf(vstDataPath, "%s%s\\", vstDataPath,globalPluginName);
+         // remove .dll extension (from globalPluginName)
         if (strstr(vstDataPath, DLL))
         *(strstr(vstDataPath, DLL)) = 0;
         sprintf(vstDataPath, "%s\\", vstDataPath);  //
@@ -222,11 +203,11 @@ void parseSetupFile()
         // add SETUPFILEEXT extension
         sprintf(vstSetupFileName,"%s%s",vstSetupFileName,SETUPFILEEXT);
         // remove .dll extension (again here)
-		if (strstr(strlowercase(globalPluginName), DLL))
-			*(strstr(strlowercase(globalPluginName), DLL)) = 0;
-        strcpy(globalPluginPath,vstDataPath); 
+        if (strstr(strlowercase(globalPluginName), DLL))
+            *(strstr(strlowercase(globalPluginName), DLL)) = 0;
+        strcpy(globalPluginPath,vstDataPath);
 
-    }            
+    }
     #else // find filepaths (Unix)
     #define DLL ".so"
     if (strrchr(unixname, '/'))
@@ -241,9 +222,9 @@ void parseSetupFile()
     if (strrchr(unixname, '/'))
     {
         strcpy(vstDataPath, unixname);
-		*(strrchr(vstDataPath, '/') + 1) = 0;
-		sprintf(vstDataPath, "%s%s/", vstDataPath,globalPluginName);
-		 // remove .dll extension (from globalPluginName)
+        *(strrchr(vstDataPath, '/') + 1) = 0;
+        sprintf(vstDataPath, "%s%s/", vstDataPath,globalPluginName);
+         // remove .dll extension (from globalPluginName)
         if (strstr(vstDataPath, DLL))
         *(strstr(vstDataPath, DLL)) = 0;
         sprintf(vstDataPath, "%s/", vstDataPath);  //
@@ -254,9 +235,9 @@ void parseSetupFile()
         *(strstr(vstSetupFileName, DLL)) = 0;
         // add SETUPFILEEXT extension
         sprintf(vstSetupFileName,"%s%s",vstSetupFileName,SETUPFILEEXT);
-		// remove .dll extension (again here)
-		if (strstr(strlowercase(globalPluginName), DLL))
-			*(strstr(strlowercase(globalPluginName), DLL)) = 0;
+        // remove .dll extension (again here)
+        if (strstr(strlowercase(globalPluginName), DLL))
+            *(strstr(strlowercase(globalPluginName), DLL)) = 0;
         strcpy(globalPluginPath,vstDataPath);
     }
     #endif
@@ -267,16 +248,16 @@ void parseSetupFile()
     globalNParams = 0;
     for (i = 0; i < MAXPARAMS; i++)
         strcpy(globalVstParamName[i], "<unnamed>");
-    globalNPrograms = 1;   
+    globalNPrograms = 1;
     // check existence of setup file in vst-subfolder
     if( access(vstSetupFileName, F_OK ) != -1 )
         // if exists choose this alternate file
     {
         setupFile = fopen(vstSetupFileName, "r");
         //strcpy(setupFileName,vstSetupFileName);
-    }   
+    }
     if (setupFile) {
-        
+
         while (fgets(line, sizeof(line), setupFile))
         {
             equalPos = strchr(line, '=') - line;
@@ -369,8 +350,8 @@ void parseSetupFile()
                     globalCustomGuiWidth = atoi(value);
 
                 }
-				// debug (show Pd GUI)
-				if (strcmp(param, "debug") == 0)
+                // debug (show Pd GUI)
+                if (strcmp(param, "debug") == 0)
                 {
                     if (strcmp(strlowercase(value), "true") == 0)
                     {
@@ -418,7 +399,7 @@ void parseSetupFile()
                                                              (float)atof(value);
                 }
                 // programsarechunks (save custom data in .fxp or .fxb file)
-				if (strcmp(param, "programsarechunks") == 0)
+                if (strcmp(param, "programsarechunks") == 0)
                 {
                     if (strcmp(strlowercase(value), "true") == 0)
                     {
@@ -432,10 +413,10 @@ void parseSetupFile()
             }
         }
 
-    } 
+    }
     if (setupFile) fclose(setupFile);
 
-#if 0    
+#if 0
     // vstmain debug file
     FILE *file_pointer;
     file_pointer = fopen("vstMainDebug.txt", "w");
@@ -444,6 +425,6 @@ void parseSetupFile()
     fprintf(file_pointer, "vstSetupFileName: %s\n", vstSetupFileName);
     fprintf(file_pointer, "globalPluginPath: %s\n", globalPluginPath);
     fprintf(file_pointer, "globalPureDataPath: %s\n", globalPureDataPath);
-    fclose(file_pointer);    
-#endif    
+    fclose(file_pointer);
+#endif
 }
