@@ -459,7 +459,7 @@ void pdvst::sendGuiAction(int action)
     }
 }
 
-void pdvst::sendPlugName(char * pName )     // pour envoyer le nom du plugin à puredata
+void pdvst::sendPlugName(char * pName )     // pour envoyer le nom du plugin Ã  puredata
 {
     xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
@@ -716,7 +716,7 @@ VstInt32 pdvst::canDo(char* text)
 
 #if _WIN32
 DWORD WINAPI NotifySyncError(LPVOID lpParam) {
-    MessageBoxA(NULL, "Le processus PureData met du temps à répondre", "PdVST", MB_OK);
+    MessageBoxA(NULL, "Le processus PureData met du temps Ã  rÃ©pondre", "PdVST", MB_OK);
     return 0;
 }
 #endif
@@ -740,15 +740,15 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
                 midiEvnts[ka].midiData[2] = pdvstData->midiOutQueue[ka].dataByte2;
             }
             evnts->numEvents=midiOutQueueSize;
-            sendVstEventsToHost(evnts);  // rajouter un test de réussite
+            sendVstEventsToHost(evnts);  // rajouter un test de rÃ©ussite
             pdvstData->midiOutQueueUpdated=0;
             pdvstData->midiOutQueueSize=0;
             evnts->numEvents=0;
         }
         else
         {
-            // Envoyer périodiquement un sendVstEventsToHost(no_event) pour signifier
-            // à Ableton Live qu'on est bien vivant et qu'on envoie du midi
+            // Envoyer pÃ©riodiquement un sendVstEventsToHost(no_event) pour signifier
+            // Ã  Ableton Live qu'on est bien vivant et qu'on envoie du midi
             // (tous les 120 tours de buffer)
             nbFramesWithoutMidiOutEvent++;
             if (nbFramesWithoutMidiOutEvent>120)
@@ -832,7 +832,7 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
             int gotPdProcEvent = (xxWaitForSingleObject(pdProcEvent, 10) == 1); //WAIT_OBJECT_0
            // xxWaitForSingleObject(pdProcEvent,100);
             //xxWaitForSingleObject(pdProcEvent, 10000);
-            // JYG: 10000 était une valeur trop élevée qui faisait planter ableton live
+            // JYG: 10000 Ã©tait une valeur trop Ã©levÃ©e qui faisait planter ableton live
             // JYG }
             if (gotPdProcEvent)
                 {

@@ -741,13 +741,13 @@ int scheduler()
 #ifdef VSTMIDIOUTENABLE
         if (msw_nmidiout==0)
         {
-            int i=pdvstData->midiOutQueueSize;    // si la midiOutQueue n'a pas été vidée, rajouter des éléments à la fin de celle-ci
+            int i=pdvstData->midiOutQueueSize;    // si la midiOutQueue n'a pas Ã©tÃ© vidÃ©e, rajouter des Ã©lÃ©ments Ã  la fin de celle-ci
             while (midi_outhead != _midi_outtail)
             {
                int statusType = midi_outqueue[_midi_outtail].q_byte1 & 0xF0;
                int statusChannel = midi_outqueue[_midi_outtail].q_byte1 & 0x0F;
 
-                // faut il gérer midi_outqueue[_midi_outtail].q_onebyte  ?
+                // faut il gÃ©rer midi_outqueue[_midi_outtail].q_onebyte  ?
 
                 ///copie de la pile midi_outqueue dans la pile vst midiOutQueue
                 pdvstData->midiOutQueue[i].channelNumber= statusChannel;

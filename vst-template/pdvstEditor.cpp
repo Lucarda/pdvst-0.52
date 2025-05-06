@@ -142,9 +142,9 @@ void pdvstEditor::close()
 void pdvstEditor::idle()
 {
 
-       // JYG :: masquer la fenêtre GUI créée par hôte VST pour laisser puredata le faire
-  //  SetWindowPos((HWND)systemWindow,HWND_TOPMOST,-300,-300,0,0,SWP_NOSIZE);  // déplacer la fenetre
-  //  SetWindowPos((HWND)systemWindow,NULL,0,0,0,0,SWP_NOZORDER|SWP_NOMOVE|SWP_NOSIZE|SWP_HIDEWINDOW); //masquer la fenêtre
+       // JYG :: masquer la fenÃªtre GUI crÃ©Ã©e par hÃ´te VST pour laisser puredata le faire
+  //  SetWindowPos((HWND)systemWindow,HWND_TOPMOST,-300,-300,0,0,SWP_NOSIZE);  // dÃ©placer la fenetre
+  //  SetWindowPos((HWND)systemWindow,NULL,0,0,0,0,SWP_NOZORDER|SWP_NOMOVE|SWP_NOSIZE|SWP_HIDEWINDOW); //masquer la fenÃªtre
   //  systemWindowHidden=true;
   // JYG
     if (((pdvst *)this->effect)->guiNameUpdated)
