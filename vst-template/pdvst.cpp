@@ -311,6 +311,7 @@ void pdvst::startPd()
          debugString[MAXSTRLEN],
          pathToCheck[MAXSTRLEN],
          schedulerPath[MAXSTRLEN];
+    char *unixlastargs = "2>&1 &";
 
     #if _WIN32 //Windows
     
@@ -520,6 +521,9 @@ void pdvst::startPd()
                 commandLineArgs,
                 externalLib[i]);
     }
+    #ifndef _WIN32
+    sprintf(commandLineArgs,"%s%s",commandLineArgs, unixlastargs);
+    #endif
     debugLog("command line: %s", commandLineArgs);
     suspend();
     
@@ -540,7 +544,6 @@ void pdvst::startPd()
     #else
         system(commandLineArgs);
     #endif
-    resume();
 }
 
 void pdvst::sendGuiAction(int action)
