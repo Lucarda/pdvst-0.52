@@ -19,7 +19,6 @@
 */
 
 #define _WIN32_WINDOWS 0x410
-
 #include "pdvst.hpp"
 #include <malloc.h>
 #if _WIN32
@@ -29,7 +28,6 @@
     #include <semaphore.h>
     #include <fcntl.h>
     #include <sys/mman.h>
-
 #endif
 #include <string.h>
 #include <stdlib.h>
@@ -39,8 +37,6 @@
 #include <sys/stat.h>
 #include <fstream>
 #include <unistd.h>
-
-
 #ifdef _MSC_VER
 #define stat _stat
 #endif
@@ -64,12 +60,10 @@ extern bool globalCustomGui;
 extern int globalCustomGuiWidth;
 extern int globalCustomGuiHeight;
 extern bool globalProgramsAreChunks;
-
 extern bool globalIsASynth;
 extern pdvstProgram globalProgram[MAXPROGRAMS];
 
 int pdvst::referenceCount = 0;
-
 
    /* change '/' characters to the system's native file separator */
 void sys_bashfilename(const char *from, char *to)
@@ -98,15 +92,6 @@ void sys_unbashfilename(const char *from, char *to)
     *to = 0;
 }
 
-/*
-bool fexists(const char *filename)
-{
-  std::ifstream ifile(filename);
-  return ifile;
-}
-
-*/
-
 #if _WIN32
     int xxWaitForSingleObject(HANDLE mutex, int ms);
     int xxReleaseMutex(HANDLE mutex);
@@ -117,16 +102,13 @@ bool fexists(const char *filename)
     int xxReleaseMutex(sem_t *mutex);
     void xxSetEvent(sem_t *mutex);
     void xxResetEvent(sem_t *mutex);
-    //int fd;
 #endif
-
-
 
 //-------------------------------------------------------------------------------------------------------
 AudioEffect* createEffectInstance (audioMasterCallback audioMaster)
 {
     //MessageBox(NULL,"createinstance","lucarda",MB_OK);
-	return new pdvst (audioMaster);
+    return new pdvst (audioMaster);
 }
 
 pdvst::pdvst(audioMasterCallback audioMaster)
@@ -134,7 +116,6 @@ pdvst::pdvst(audioMasterCallback audioMaster)
 {
      // set debug output
     debugFile = fopen("pdvstdebug.txt", "wt");
-    // debugFile = NULL;
 
     // copy global data
     isASynth = globalIsASynth;
@@ -148,7 +129,6 @@ pdvst::pdvst(audioMasterCallback audioMaster)
     nExternalLibs = globalNExternalLibs;
     debugLog("name: %s", globalPluginName);
     debugLog("synth: %d", globalIsASynth);
-
     // VST setup
     setNumInputs(nChannels);
     setNumOutputs(nChannels);
@@ -159,11 +139,7 @@ pdvst::pdvst(audioMasterCallback audioMaster)
     {
         isSynth();
     }
-
     int i, j;
-
-
-
     // initialize memory
     vstParamName = new char*[MAXPARAMETERS];
     for (i = 0; i < MAXPARAMETERS; i++)
@@ -209,9 +185,7 @@ pdvst::pdvst(audioMasterCallback audioMaster)
     #endif
     #ifdef VSTMIDIOUTENABLE
     // initializing structures for midiout support
-
     nbFramesWithoutMidiOutEvent=0;
-
     evnts = (struct VstEvents*)malloc(sizeof(struct VstEvents) +
                                   MAXMIDIOUTQUEUESIZE*sizeof(VstEvent*));
     //initialisation du tableau  midiEvnts[MAXMIDIOUTQUEUESIZE];
@@ -228,16 +202,10 @@ pdvst::pdvst(audioMasterCallback audioMaster)
         midiEvnts[k].reserved2 = 0;
         midiEvnts[k].midiData[3] = 0;
         midiEvnts[k].noteOffset = 0;
-
         //cast
         evnts->events[k] = (VstEvent*)&midiEvnts[k];
     }
-
-
      #endif //VSTMIDIOUTENABLE
-
-
-
         //timeBeginPeriod(1);
     debugLog("startingPd...");
     // start pd.exe
@@ -245,7 +213,6 @@ pdvst::pdvst(audioMasterCallback audioMaster)
     debugLog("done");
     //setProgram(curProgram);
     referenceCount++;
-
      //  {JYG   see pdvst::setProgram below for explanation
     #if _WIN32
     timeFromStartup=GetTickCount();
@@ -258,7 +225,6 @@ pdvst::pdvst(audioMasterCallback audioMaster)
 pdvst::~pdvst()
 {
     int i;
-
     referenceCount--;
     pdvstData->active = 0;
     #ifdef _WIN32
@@ -295,16 +261,9 @@ void pdvst::debugLog(char *fmt, ...)
         fflush(debugFile);
     }
 }
-/*
-void pdvst::dummyclosefd(int df)
-{
-	close(df);
-}
-*/
+
 void pdvst::startPd()
 {
-    
-
     char commandLineArgs[MAXSTRLEN],
          debugString[MAXSTRLEN],
          pathToCheck[MAXSTRLEN],
@@ -312,7 +271,7 @@ void pdvst::startPd()
     char *unixlastargs = "2>&1 &";
 
     #if _WIN32 //Windows
-    
+
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
     ZeroMemory(&si, sizeof(si));
@@ -337,7 +296,7 @@ void pdvst::startPd()
                                                    0,
                                                    sizeof(pdvstTransferData));
     #else // Unix
-        
+
     sprintf(pdvstTransferMutexName, "/mutex%d%x", getpid(), this);
     sprintf(pdvstTransferFileMapName, "/filemap%d%x", getpid(), this);
     sprintf(vstProcEventName, "/vstprocevent%d%x", getpid(), this);
@@ -347,12 +306,12 @@ void pdvst::startPd()
     pdProcEvent = sem_open(pdProcEventName, O_CREAT, 0666, 0);
     fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);
     ftruncate(fd, sizeof(pdvstTransferData));
-    pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData), 
-                                PROT_READ | PROT_WRITE, MAP_SHARED, 
+    pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData),
+                                PROT_READ | PROT_WRITE, MAP_SHARED,
                                 fd, 0);
-    ::close(fd); //checkout this. it should close but there's compiler error. why?
+    ::close(fd);
     pdvstData = (pdvstTransferData *)pdvstTransferFileMap;
-        
+
     #endif
     int i;
     pdvstData->active = 1;
@@ -376,14 +335,14 @@ void pdvst::startPd()
     {
         strcpy(debugString, " -nogui");
     }
-    
-    #if _WIN32 //Windows 
+
+    #if _WIN32 //Windows
     while(1)
     {
         sprintf(commandLineArgs, "%s\\bin\\pd.exe", globalPureDataPath);
         if( access( commandLineArgs, F_OK ) != -1 )
             break;
-   
+
         sprintf(commandLineArgs, "%s..\\.pd\\bin\\pd.exe", globalPluginPath);
         if( access( commandLineArgs, F_OK ) != -1 )
             break;
@@ -391,81 +350,27 @@ void pdvst::startPd()
                               globalPluginPath,globalPluginName);
             break;
     }
-    #else
+    #else // linux
 
     while(1)
     {
         sprintf(commandLineArgs, "%s/bin/pd", globalPureDataPath);
         if( access( commandLineArgs, F_OK ) != -1 )
         {
-			sprintf(schedulerPath, "%s/bin", globalPureDataPath);
+            sprintf(schedulerPath, "%s/bin", globalPureDataPath);
             break;
-		}
-   
+        }
+
         sprintf(commandLineArgs, "%s../.pd/bin/pd", globalPluginPath);
         if( access( commandLineArgs, F_OK ) != -1 )
         {
-			sprintf(schedulerPath, "%s../.pd/bin", globalPluginPath);    
+            sprintf(schedulerPath, "%s../.pd/bin", globalPluginPath);
             break;
-		}
+        }
         sprintf(errorMessage,"pd program not found. Check your settings in \n%s%s.pdv \n setup file. (search for the line PDPATH)",
                               globalPluginPath,globalPluginName);
             break;
     }
-    
-    
-    #endif 
-
-
-
-    
-    #if 0 // all this code will be deleted
-    
-    if (strcmp(globalPureDataPath, "") == 0)  // unspecified puredata path. Defaults to globalHostPdvstPath
-        {
-            sprintf(commandLineArgs, "%s\\pd\\bin\\pd.exe", globalHostPdvstPath);
-             if( access( commandLineArgs, F_OK ) != -1 )   // check if file exists
-                sprintf(commandLineArgs, "\"%s\\pd\\bin\\pd.exe\"", globalHostPdvstPath);
-             else
-             {
-                 sprintf(commandLineArgs, "%s..\\.pd\\bin\\pd.exe", globalPluginPath);
-                  //MessageBox(NULL,commandLineArgs,"commandLineArgs...",MB_OK);
-                 if( access( commandLineArgs, F_OK ) != -1 )   // check if file exists
-                    sprintf(commandLineArgs, "\"%s..\\.pd\\bin\\pd.exe\"", globalPluginPath);
-                 else
-                    {
-                        sprintf(errorMessage,"pd.exe program not found in \n1: %spd\\bin\\\n2: %s..\\.pd\\bin\\\nCheck your settings in \n%s%s.pdv",
-                                globalHostPdvstPath,globalPluginPath,globalPluginPath,globalPluginName);
-                        MessageBox(NULL,errorMessage,"ERROR",MB_OK);
-                        return;
-                    }
-             }
-        }
-    else
-        {
-            sprintf(commandLineArgs, "%s\\bin\\pd.exe", globalPureDataPath);
-            if ( access( commandLineArgs, F_OK ) != -1 )   // file exists
-                sprintf(commandLineArgs,"\"%s\\bin\\pd.exe\"", globalPureDataPath);
-            else
-                 {
-                    sprintf(errorMessage,"pd.exe program not found. Check your settings in \n%s%s.pdv \n setup file. (search for the line PDPATH)",
-                            globalPluginPath,globalPluginName);
-                    //MessageBox(NULL,errorMessage,"ERROR",MB_OK);
-                    return;
-                }
-        }
-
-
-
-           // if (!fexists(commandLineArgs))
-           //   sprintf(commandLineArgs, "\"%s\\pd\\bin\\pd.exe\"", pluginPath);
-            // check validity of pd.exe path
-         /*
-            struct stat statbuf;
-            sys_bashfilename(commandLineArgs, pathToCheck);
-            if (stat(pathToCheck, &statbuf) < 0)
-                // if failed, use defaults
-                sprintf(commandLineArgs, "\"%s\\pd\\bin\\pd.exe\"", pluginPath);*/
     #endif
 
     sprintf(commandLineArgs,
@@ -524,9 +429,7 @@ void pdvst::startPd()
     #endif
     debugLog("command line: %s", commandLineArgs);
     suspend();
-    
 
-    
     #if _WIN32
     CreateProcess(NULL,
                   commandLineArgs,
@@ -538,7 +441,7 @@ void pdvst::startPd()
                   NULL,
                   &si,
                   &pi);
-                  
+
     #else
         system(commandLineArgs);
     #endif
@@ -570,7 +473,6 @@ void pdvst::sendPlugName(char * pName )     // pour envoyer le nom du plugin à p
 
 void pdvst::setSyncToVst(int value)
 {
-
     //if (xxWaitForSingleObject(pdvstTransferMutex, 10)==WAIT_OBJECT_0)
     xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
@@ -580,13 +482,12 @@ void pdvst::setSyncToVst(int value)
         }
         xxReleaseMutex(pdvstTransferMutex);
     }
-
 }
 
 void pdvst::suspend()
 {
     int i;
-    setSyncToVst(0);   
+    setSyncToVst(0);
     xxSetEvent(vstProcEvent);
 
     for (i = 0; i < audioBuffer->nChannels; i++)
@@ -620,7 +521,6 @@ void pdvst::resume()
 
 void pdvst::sendProgChange(VstInt32 prgm)
 {
-
     xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
         pdvstData->prognumber2pd.direction = PD_RECEIVE;
@@ -632,7 +532,6 @@ void pdvst::sendProgChange(VstInt32 prgm)
         pdvstData->progname2pd.type = STRING_TYPE;
         strcpy(pdvstData->progname2pd.value.stringData, program[prgm].name);
         pdvstData->progname2pd.updated = 1;
-
         xxReleaseMutex(pdvstTransferMutex);
     }
 }
@@ -646,13 +545,12 @@ void pdvst::setProgram(VstInt32 prgmNum)
             curProgram = prgmNum;
             sendProgChange(prgmNum);
 
+        // {JYG    to prevent host call of setProgram to override current param settings
+        // see https://www.kvraudio.com/forum/viewtopic.php?p=6391144
+        // sprintf(errorMessage,"GetTickCount=%d\ntimeFromStartup=%d",
+        //       GetTickCount(),timeFromStartup);
+        //       MessageBox(NULL, errorMessage,"setProgram",MB_OK);
 
-   // {JYG    to prevent host call of setProgram to override current param settings
-   // see https://www.kvraudio.com/forum/viewtopic.php?p=6391144
-           // sprintf(errorMessage,"GetTickCount=%d\ntimeFromStartup=%d",
-             //       GetTickCount(),timeFromStartup);
-            //MessageBox(NULL, errorMessage,"setProgram",MB_OK);
-            
             #if _WIN32
             if ((GetTickCount()-timeFromStartup) < 1000)
                 return;
@@ -668,10 +566,9 @@ void pdvst::setProgram(VstInt32 prgmNum)
             for (i = 0; i < nParameters; i++)
                 {
                     setParameter(i, program[curProgram].paramValue[i]);
-                }    
+                }
             #endif
    }
-
 }
 
 VstInt32 pdvst::getProgram()
@@ -687,8 +584,7 @@ void pdvst::setProgramName(char *name)
 void pdvst::getProgramName(char *name)
 {
     strcpy(name, program[curProgram].name);
-        //  {JYG   see pdvst::setProgram below for explanation
-    
+    //  {JYG   see pdvst::setProgram below for explanation
     #if _WIN32
     timeFromStartup=GetTickCount();
     #endif
@@ -741,50 +637,46 @@ void pdvst::getParameterLabel(VstInt32 index, char *label)
 // FIXME
 bool pdvst::getEffectName(char* name)
 {
-	strcpy (name, globalPluginName);
-	return true;
+    strcpy (name, globalPluginName);
+    return true;
 }
 
 // FIXME
 bool pdvst::getOutputProperties(VstInt32 index, VstPinProperties* properties)
 {
-	if (1)//index < 2)
-	{
-		sprintf (properties->label, "pd-vst %1d", index + 1);
-		properties->flags = kVstPinIsActive;
-		if ((index %2)==0)
-			properties->flags |= kVstPinIsStereo;	// make channel 1+2 stereo
-		return true;
-	}
-	return false;
+    if (1)//index < 2)
+    {
+        sprintf (properties->label, "pd-vst %1d", index + 1);
+        properties->flags = kVstPinIsActive;
+        if ((index %2)==0)
+            properties->flags |= kVstPinIsStereo;   // make channel 1+2 stereo
+        return true;
+    }
+    return false;
 }
 
 VstInt32 pdvst::getChunk (void** data, bool isPreset)
 {
-
-    Chunk = new pdvstProgramAreChunks;      
+    Chunk = new pdvstProgramAreChunks;
     for (int i = 0; i < nParameters; i++)
     {
         Chunk->vstParam[i] = vstParam[i];
-    }    
+    }
     xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
         memset(&Chunk->Data, '\0', MAXSTRLEN);
         strcpy (Chunk->Data, pdvstData->datachunk.value.stringData);
         xxReleaseMutex(pdvstTransferMutex);
-    }        
-        
-    debugLog("luc:debug-size-of-chunk %d", sizeof(*Chunk));
-    *data = (void*)Chunk;        
+    }
+    *data = (void*)Chunk;
     return sizeof(*Chunk);
 }
 
 VstInt32 pdvst::setChunk (void* data, VstInt32 byteSize, bool isPreset)
 {
-
     if(byteSize)
-    {        
-        Chunk = (pdvstProgramAreChunks*)data;       
+    {
+        Chunk = (pdvstProgramAreChunks*)data;
         xxWaitForSingleObject(pdvstTransferMutex, 10);
         {
             pdvstData->datachunk.direction = PD_RECEIVE;
@@ -792,20 +684,16 @@ VstInt32 pdvst::setChunk (void* data, VstInt32 byteSize, bool isPreset)
             memset(&pdvstData->datachunk.value.stringData, '\0', MAXSTRLEN);
             strcpy(pdvstData->datachunk.value.stringData, Chunk->Data);
             pdvstData->datachunk.updated = 1;
-            
-
             for (int i = 0; i < nParameters; i++)
             {
                 pdvstData->vstParameters[i].type = FLOAT_TYPE;
                 pdvstData->vstParameters[i].value.floatData = Chunk->vstParam[i];
                 pdvstData->vstParameters[i].direction = PD_RECEIVE;
                 pdvstData->vstParameters[i].updated = 1;
-            }  
-            
+            }
             xxReleaseMutex(pdvstTransferMutex);
         }
     }
-    
     return 0;
 }
 
@@ -814,16 +702,16 @@ VstInt32 pdvst::canDo(char* text)
     //if (isASynth)
     if (1)
     {
-	    if (!strcmp (text, "sendVstEvents"))
-		    return 1;
-	    if (!strcmp (text, "sendVstMidiEvent"))
-		    return 1;
+        if (!strcmp (text, "sendVstEvents"))
+            return 1;
+        if (!strcmp (text, "sendVstMidiEvent"))
+            return 1;
         if (!strcmp (text, "receiveVstEvents"))
             return 1;
-	    if (!strcmp (text, "receiveVstMidiEvent"))
-		    return 1;
+        if (!strcmp (text, "receiveVstMidiEvent"))
+            return 1;
     }
-	return -1;
+    return -1;
 }
 
 #if _WIN32
@@ -852,12 +740,10 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
                 midiEvnts[ka].midiData[2] = pdvstData->midiOutQueue[ka].dataByte2;
             }
             evnts->numEvents=midiOutQueueSize;
-
             sendVstEventsToHost(evnts);  // rajouter un test de réussite
             pdvstData->midiOutQueueUpdated=0;
             pdvstData->midiOutQueueSize=0;
-
-             evnts->numEvents=0;
+            evnts->numEvents=0;
         }
         else
         {
@@ -874,14 +760,10 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
                 evnts->numEvents=1;
                 sendVstEventsToHost(evnts);
             }
-
         }
-
       xxReleaseMutex(pdvstTransferMutex);
     }
-
     #endif // VSTMIDIOUTENABLE
-
 
        // Get play head information
       VstTimeInfo * infos = getTimeInfo(
@@ -900,22 +782,21 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
             //if (xxWaitForSingleObject(pdvstTransferMutex, 10)==WAIT_OBJECT_0)
             xxWaitForSingleObject(pdvstTransferMutex, 10);
             {
-
                 pdvstData->hostTimeInfo.updated=1;
                 //copying vstTimeInfo into pdvst transfer data structure
-                pdvstData->hostTimeInfo.samplePos=infos->samplePos;				///< current Position in audio samples (always valid)
-                pdvstData->hostTimeInfo.sampleRate=infos->sampleRate;				///< current Sample Rate in Herz (always valid)
-                pdvstData->hostTimeInfo.nanoSeconds=infos->nanoSeconds;				///< System Time in nanoseconds (10^-9 second)
-                pdvstData->hostTimeInfo.ppqPos=infos->ppqPos;					///< Musical Position, in Quarter Note (1.0 equals 1 Quarter Note)
-                pdvstData->hostTimeInfo.tempo=infos->tempo;					///< current Tempo in BPM (Beats Per Minute)
-                pdvstData->hostTimeInfo.barStartPos=infos->barStartPos;				///< last Bar Start Position, in Quarter Note
-                pdvstData->hostTimeInfo.cycleStartPos=infos->cycleStartPos;			///< Cycle Start (left locator), in Quarter Note
-                pdvstData->hostTimeInfo.cycleEndPos=infos->cycleEndPos;				///< Cycle End (right locator), in Quarter Note
-                pdvstData->hostTimeInfo.timeSigNumerator=(int)infos->timeSigNumerator;		///< Time Signature Numerator (e.g. 3 for 3/4)
-                pdvstData->hostTimeInfo.timeSigDenominator=(int)infos->timeSigDenominator;	///< Time Signature Denominator (e.g. 4 for 3/4)
-                pdvstData->hostTimeInfo.smpteOffset=(int)infos->smpteOffset;			///< SMPTE offset (in SMPTE subframes (bits; 1/80 of a frame)). The current SMPTE position can be calculated using #samplePos, #sampleRate, and #smpteFrameRate.
-                pdvstData->hostTimeInfo.smpteFrameRate=(int)infos->smpteFrameRate;		///< @see VstSmpteFrameRate
-                pdvstData->hostTimeInfo.samplesToNextClock=(int)infos->samplesToNextClock;	///< MIDI Clock Resolution (24 Per Quarter Note), can be negative (nearest clock)
+                pdvstData->hostTimeInfo.samplePos=infos->samplePos;             ///< current Position in audio samples (always valid)
+                pdvstData->hostTimeInfo.sampleRate=infos->sampleRate;               ///< current Sample Rate in Herz (always valid)
+                pdvstData->hostTimeInfo.nanoSeconds=infos->nanoSeconds;             ///< System Time in nanoseconds (10^-9 second)
+                pdvstData->hostTimeInfo.ppqPos=infos->ppqPos;                   ///< Musical Position, in Quarter Note (1.0 equals 1 Quarter Note)
+                pdvstData->hostTimeInfo.tempo=infos->tempo;                 ///< current Tempo in BPM (Beats Per Minute)
+                pdvstData->hostTimeInfo.barStartPos=infos->barStartPos;             ///< last Bar Start Position, in Quarter Note
+                pdvstData->hostTimeInfo.cycleStartPos=infos->cycleStartPos;         ///< Cycle Start (left locator), in Quarter Note
+                pdvstData->hostTimeInfo.cycleEndPos=infos->cycleEndPos;             ///< Cycle End (right locator), in Quarter Note
+                pdvstData->hostTimeInfo.timeSigNumerator=(int)infos->timeSigNumerator;      ///< Time Signature Numerator (e.g. 3 for 3/4)
+                pdvstData->hostTimeInfo.timeSigDenominator=(int)infos->timeSigDenominator;  ///< Time Signature Denominator (e.g. 4 for 3/4)
+                pdvstData->hostTimeInfo.smpteOffset=(int)infos->smpteOffset;            ///< SMPTE offset (in SMPTE subframes (bits; 1/80 of a frame)). The current SMPTE position can be calculated using #samplePos, #sampleRate, and #smpteFrameRate.
+                pdvstData->hostTimeInfo.smpteFrameRate=(int)infos->smpteFrameRate;      ///< @see VstSmpteFrameRate
+                pdvstData->hostTimeInfo.samplesToNextClock=(int)infos->samplesToNextClock;  ///< MIDI Clock Resolution (24 Per Quarter Note), can be negative (nearest clock)
                 pdvstData->hostTimeInfo.flags=(int)infos->flags;
 
                 xxReleaseMutex(pdvstTransferMutex);
@@ -933,7 +814,6 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
     {
         setSyncToVst(1);
     }
-
 
     for (i = 0; i < sampleFrames; i++)
     {
@@ -956,21 +836,18 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
             // JYG }
             if (gotPdProcEvent)
                 {
-                    
                     xxResetEvent(pdProcEvent);
                     syncDefeatNumber=0;
                 }
             else if (syncDefeatNumber==50)
             {
                 //afficher messageErreur
-                    //CreateThread(NULL, 0, &NotifySyncError, NULL, 0, NULL);
-                    //startPd();
-                    syncDefeatNumber++;
-
+                //CreateThread(NULL, 0, &NotifySyncError, NULL, 0, NULL);
+                //startPd();
+                syncDefeatNumber++;
             }
-
-                else
-                    syncDefeatNumber++;
+            else
+                syncDefeatNumber++;
 
             for (k = 0; k < PDBLKSIZE; k++)
             {
@@ -988,7 +865,6 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
                         // put new samples in for processing
                         pdvstData->samples[l][k] = audioBuffer->in[l][k];
                     }
-
                 }
                 (audioBuffer->outFrameCount)++;
             }
@@ -1125,7 +1001,7 @@ void pdvst::updatePdvstParameters()
                     setParameterAutomated(i,
                                           pdvstData->vstParameters[i].value.floatData);
                     //endEdit(i);
-//l                    updateDisplay ();  // I have commented this because it breaks sliders, numbox, etc. If this is on it jumps to max when first clicking on sliders, etc.
+                    //l updateDisplay ();  // I have commented this because it breaks sliders, numbox, etc. If this is on it jumps to max when first clicking on sliders, etc.
                 }
                 pdvstData->vstParameters[i].updated = 0;
             }
@@ -1142,14 +1018,8 @@ void pdvst::updatePdvstParameters()
                 // signal to vesteditor that guiname is updated
                 guiNameUpdated=true;
             }
-
-
-
-
         }
-
         // to data chunk
-
         if (pdvstData->datachunk.direction == PD_SEND && \
             pdvstData->datachunk.updated)
         {
@@ -1158,10 +1028,8 @@ void pdvst::updatePdvstParameters()
                 pdvstData->datachunk.updated=0;
             }
         }
-
         xxReleaseMutex(pdvstTransferMutex);
     }
-
 }
 
 pdVstBuffer::pdVstBuffer(int nChans)

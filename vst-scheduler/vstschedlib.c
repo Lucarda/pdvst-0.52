@@ -28,7 +28,6 @@
     #include <fcntl.h>
     #include <sys/stat.h>
     #include <sys/mman.h>
-    //#include <cstdlib>
     #include <signal.h>
     #include <stdlib.h>
 #endif
@@ -42,8 +41,8 @@
 #define TIMEUNITPERSEC (32.*441000.)
 
 #define kVstTransportChanged      1
-#define	kVstTransportPlaying      2
-#define	kVstTransportRecording    8
+#define kVstTransportPlaying      2
+#define kVstTransportRecording    8
 
 FILE *debugFile;
 
@@ -83,7 +82,6 @@ FILE *debugFile;
     int fd;
 #endif
 
-
 typedef struct _vstParameterReceiver
 {
     t_object x_obj;
@@ -104,8 +102,6 @@ typedef struct _vstChunkReceiver
 
 t_vstChunkReceiver *vstChunkReceiver;
 
-
-
 t_vstParameterReceiver *vstParameterReceivers[MAXPARAMETERS];
 
 t_class *vstParameterReceiver_class;
@@ -116,10 +112,10 @@ char *pdvstTransferMutexName,
      *pdvstTransferFileMapName,
      *vstProcEventName,
      *pdProcEventName;
-     
+
 pdvstTransferData *pdvstData;
-     
-#if _WIN32    
+
+#if _WIN32
     HANDLE  pdvstTransferMutex,
             pdvstTransferFileMap,
             vstProcEvent,
@@ -130,9 +126,9 @@ pdvstTransferData *pdvstData;
     sem_t   *pdvstTransferMutex,
             *vstProcEvent,
             *pdProcEvent;
-    pid_t   vstHostProcessId;   
+    pid_t   vstHostProcessId;
 #endif
-       
+
 pdvstTimeInfo  timeInfo;
 
 void debugLog(char *fmt, ...)
@@ -149,11 +145,11 @@ void debugLog(char *fmt, ...)
     }
 }
 
-void pdvst_sleep(int n) 
+void pdvst_sleep(int n)
 {
 #ifdef _WIN32
     Sleep(n);
-#else    
+#else
     usleep(n*1000);
 #endif
 }
@@ -208,15 +204,11 @@ void parseArgs(int argc, char **argv)
             }
             #else
             vstHostProcessId = atoi(argv[1]);
-//debugLog("lucarda: vsthostid: %d", vstHostProcessId );
-
-            if (kill(vstHostProcessId, 0) == -1) 
+            if (kill(vstHostProcessId, 0) == -1)
             {
                 // Process doesn't exist or we don't have permission
                 exit(1);
             }
-
-  
             #endif
             argc -= 2;
             argv += 2;
@@ -267,7 +259,6 @@ int setPdvstGuiState(int state)
         return 0;
 }
 
-
 int setPdvstPlugName(char* instanceName)
 {
     t_symbol *tempSym;
@@ -286,16 +277,16 @@ int setPdvstChunk(const char *amsg)
 {
     t_symbol *tempSym;
     tempSym = gensym("rvstdata");
-    
+
     if (tempSym->s_thing)
     {
         size_t len = strlen(amsg);
         t_binbuf* bbuf = binbuf_new();
         binbuf_text(bbuf, amsg, len);
-    
+
         int msg, natom = binbuf_getnatom(bbuf);
         t_atom *at = binbuf_getvec(bbuf);
-  
+
         for (msg = 0; msg < natom;) {
             int emsg;
             for (emsg = msg; emsg < natom && at[emsg].a_type != A_COMMA
@@ -321,10 +312,9 @@ int setPdvstChunk(const char *amsg)
             nodice:
             msg = emsg + 1;
         }
-  
         binbuf_free(bbuf);
-        return 1;    
-    }    
+        return 1;
+    }
     else
     return 0;
 }
@@ -367,14 +357,14 @@ void sendPdVstChunk(t_vstChunkReceiver *x, t_symbol *s, int argc, t_atom *argv)
     char *buf;
     int length;
     t_atom at;
-    t_binbuf*bbuf = binbuf_new();  
-  
+    t_binbuf*bbuf = binbuf_new();
+
     SETSYMBOL(&at, s);
     binbuf_add(bbuf, 1, &at);
     binbuf_add(bbuf, argc, argv);
     binbuf_gettext(bbuf, &buf, &length);
     binbuf_free(bbuf);
-  
+
     xxWaitForSingleObject(pdvstTransferMutex, -1);
     memset(&pdvstData->datachunk.value.stringData, '\0', MAXSTRINGSIZE);
     pdvstData->datachunk.type = STRING_TYPE;
@@ -383,7 +373,7 @@ void sendPdVstChunk(t_vstChunkReceiver *x, t_symbol *s, int argc, t_atom *argv)
     //strcpy(pdvstData->datachunk.value.stringData,buf);
     memcpy(pdvstData->datachunk.value.stringData, buf, length);
     xxReleaseMutex(pdvstTransferMutex);
-    
+
     freebytes(buf, length+1);
 }
 
@@ -409,19 +399,18 @@ void makePdvstParameterReceivers()
         vstParameterReceivers[i]->x_sym = gensym(string);
         pd_bind(&vstParameterReceivers[i]->x_obj.ob_pd, gensym(string));
     }
-
 }
 
 void makePdvstGuiNameReceiver()
 {
-        vstGuiNameReceiver = (t_vstGuiNameReceiver *)pd_new(vstGuiNameReceiver_class);
-        pd_bind(&vstGuiNameReceiver->x_obj.ob_pd, gensym("guiName"));
+    vstGuiNameReceiver = (t_vstGuiNameReceiver *)pd_new(vstGuiNameReceiver_class);
+    pd_bind(&vstGuiNameReceiver->x_obj.ob_pd, gensym("guiName"));
 }
 
 void makevstChunkReceiver()
 {
-        vstChunkReceiver = (t_vstChunkReceiver *)pd_new(vstChunkReceiver_class);
-        pd_bind(&vstChunkReceiver->x_obj.ob_pd, gensym("svstdata"));
+    vstChunkReceiver = (t_vstChunkReceiver *)pd_new(vstChunkReceiver_class);
+    pd_bind(&vstChunkReceiver->x_obj.ob_pd, gensym("svstdata"));
 }
 
 void send_dacs(void)
@@ -477,16 +466,10 @@ int HFClock()
 
 int scheduler()
 {
-    
-debugLog("lucarda: schedulerscheduler");
-
-    
     int i, blockTime, active = 1;
-     
-    #if _WIN32    
+    #if _WIN32
     DWORD vstHostProcessStatus = 0;
     #endif
-
     vstParameterReceiver_class = class_new(gensym("vstParameterReceiver"),
                                            0,
                                            0,
@@ -496,7 +479,6 @@ debugLog("lucarda: schedulerscheduler");
 
     class_addfloat(vstParameterReceiver_class, (t_method)sendPdVstFloatParameter);
     makePdvstParameterReceivers();
-      
 
     vstChunkReceiver_class = class_new(gensym("vstChunkReceiver"),
                                            0,
@@ -507,9 +489,7 @@ debugLog("lucarda: schedulerscheduler");
 
     class_addanything(vstChunkReceiver_class,(t_method)sendPdVstChunk);
     makevstChunkReceiver();
-    
-    
-    
+
     vstGuiNameReceiver_class = class_new(gensym("vstGuiNameReceiver"),
                                            0,
                                            0,
@@ -523,7 +503,7 @@ debugLog("lucarda: schedulerscheduler");
     *(get_sys_time_per_dsp_tick()) = (TIMEUNITPERSEC) * \
                                      ((double)*(get_sys_schedblocksize())) / \
                                      *(get_sys_dacsr());
-//l sys_clearhist();
+    //l sys_clearhist();
     //if (*(get_sys_sleepgrain()) < 1000)   // JYG
     if (*(get_sys_sleepgrain()) < 100)
     {
@@ -544,7 +524,6 @@ debugLog("lucarda: schedulerscheduler");
     #endif // VSTMIDIOUTENABLE
     while (active)
     {
-//debugLog("lucarda: active premutex");
         xxWaitForSingleObject(pdvstTransferMutex, -1);
         active = pdvstData->active;
         // check sample rate
@@ -562,14 +541,13 @@ debugLog("lucarda: schedulerscheduler");
             if(setPdvstGuiState((int)pdvstData->guiState.value.floatData))
                 pdvstData->guiState.updated=0;
         }
-                // JYG {  check for vstplug instance name
+        // JYG {  check for vstplug instance name
         if (pdvstData->plugName.direction == PD_RECEIVE && \
             pdvstData->plugName.updated)
         {
              if (setPdvstPlugName((char*)pdvstData->plugName.value.stringData))
                 pdvstData->plugName.updated=0;
         }
-        
         // check for data chunk from file
         if (pdvstData->datachunk.direction == PD_RECEIVE && \
             pdvstData->datachunk.updated)
@@ -577,8 +555,7 @@ debugLog("lucarda: schedulerscheduler");
              if (setPdvstChunk((char*)pdvstData->datachunk.value.stringData))
                 pdvstData->datachunk.updated=0;
         }
-
-        // check for vst program name changed 
+        // check for vst program name changed
         if (pdvstData->prognumber2pd.direction == PD_RECEIVE && \
             pdvstData->prognumber2pd.updated)
         {
@@ -588,7 +565,6 @@ debugLog("lucarda: schedulerscheduler");
                 pd_float(tempSym->s_thing, (t_float)pdvstData->prognumber2pd.value.floatData);
             pdvstData->prognumber2pd.updated=0;
         }
-        
         // check for vst program number changed
         if (pdvstData->progname2pd.direction == PD_RECEIVE && \
             pdvstData->progname2pd.updated)
@@ -600,12 +576,10 @@ debugLog("lucarda: schedulerscheduler");
                     gensym(pdvstData->progname2pd.value.stringData));
             pdvstData->progname2pd.updated=0;
         }
-        
         if (pdvstData->hostTimeInfo.updated)
         {
             pdvstData->hostTimeInfo.updated=0;
             t_symbol *tempSym;
-
             if (timeInfo.flags!=pdvstData->hostTimeInfo.flags)
             {
                 timeInfo.flags=pdvstData->hostTimeInfo.flags;
@@ -620,13 +594,10 @@ debugLog("lucarda: schedulerscheduler");
                     timeInfo.flags=0;
                     pdvstData->hostTimeInfo.updated=1;  // keep flag as updated
                  }
-
             }
-
             if ((timeInfo.flags&(kVstTransportChanged|kVstTransportPlaying|kVstTransportRecording))||(timeInfo.ppqPos!=(float)pdvstData->hostTimeInfo.ppqPos))
             {
                 timeInfo.ppqPos=(float)pdvstData->hostTimeInfo.ppqPos;
-
                 tempSym = gensym("vstTimeInfo.ppqPos");
                 if (tempSym->s_thing)
                 {
@@ -641,7 +612,6 @@ debugLog("lucarda: schedulerscheduler");
             if ((timeInfo.flags&kVstTransportChanged)|(timeInfo.tempo!=(float)pdvstData->hostTimeInfo.tempo))
             {
                 timeInfo.tempo=(float)pdvstData->hostTimeInfo.tempo;
-
                 tempSym = gensym("vstTimeInfo.tempo");
                 if (tempSym->s_thing)
                 {
@@ -665,14 +635,13 @@ debugLog("lucarda: schedulerscheduler");
                 }
                  else
                 {
-                   timeInfo.timeSigNumerator=0;
+                    timeInfo.timeSigNumerator=0;
                     pdvstData->hostTimeInfo.updated=1;  // keep flag as updated
                  }
             }
             if ((timeInfo.flags&kVstTransportChanged)| timeInfo.timeSigDenominator!=pdvstData->hostTimeInfo.timeSigDenominator)
             {
                 timeInfo.timeSigDenominator=pdvstData->hostTimeInfo.timeSigDenominator;
-
                 tempSym = gensym("vstTimeInfo.timeSigDenominator");
                 if (tempSym->s_thing)
                 {
@@ -680,15 +649,11 @@ debugLog("lucarda: schedulerscheduler");
                 }
                  else
                 {
-                   timeInfo.timeSigDenominator=0;
+                    timeInfo.timeSigDenominator=0;
                     pdvstData->hostTimeInfo.updated=1;  // keep flag as updated
                  }
             }
-
         }
-
-
-
             // JYG }
         for (i = 0; i < pdvstData->nParameters; i++)
         {
@@ -799,13 +764,11 @@ debugLog("lucarda: schedulerscheduler");
                     //    post("note_off[%d] : %d",i,midi_outqueue[_midi_outtail].q_byte2);
 
                     }
-
                     else
                     {
                         // note on
                         pdvstData->midiOutQueue[i].messageType = NOTE_ON;
-                    //post("note_on[%d] : %d",i,midi_outqueue[_midi_outtail].q_byte2);
-
+                        //post("note_on[%d] : %d",i,midi_outqueue[_midi_outtail].q_byte2);
                     }
                 else if (statusType == 0xA0)
                     // key pressure
@@ -825,13 +788,10 @@ debugLog("lucarda: schedulerscheduler");
                 else
                     // something else
                     pdvstData->midiOutQueue[i].messageType  = OTHER;
-
-
-                _midi_outtail  = (_midi_outtail + 1 == MIDIQSIZE ? 0 : _midi_outtail + 1);
-                i  = i + 1;
+                    _midi_outtail  = (_midi_outtail + 1 == MIDIQSIZE ? 0 : _midi_outtail + 1);
+                    i  = i + 1;
                 if (i>= MAXMIDIOUTQUEUESIZE)
                     break;
-
             }
                 if (i>0)
                 {
@@ -855,8 +815,6 @@ debugLog("lucarda: schedulerscheduler");
         }
         if (pdvstData->syncToVst)
         {
-            
- //debugLog("lucarda: if (pdvstData->syncToVst)");           
             xxReleaseMutex(pdvstTransferMutex);
             if (xxWaitForSingleObject(vstProcEvent, 1000) == 0) //WAIT_TIMEOUT
             {
@@ -874,7 +832,6 @@ debugLog("lucarda: schedulerscheduler");
             xxReleaseMutex(pdvstTransferMutex);
             scheduler_tick();
             pdvst_sleep(blockTime);
-//debugLog("lucarda: if NOT (pdvstData->syncToVst)"); 
         }
         #ifdef _WIN32
         GetExitCodeProcess(vstHostProcess, &vstHostProcessStatus);
@@ -884,11 +841,11 @@ debugLog("lucarda: schedulerscheduler");
         }
         #else
 
-        if (kill(vstHostProcessId, 0) == -1) 
+        if (kill(vstHostProcessId, 0) == -1)
         {
             active = 0;
         }
-        #endif            
+        #endif
     }
     return 1;
 }
@@ -897,22 +854,14 @@ int pd_extern_sched(char *flags)
 {
     int i, argc;
     char *argv[MAXARGS];
-//l sys_audioapi = API_NONE;
 
-	debugFile = fopen("pdvstschedulerdebug.txt", "wt");
-
-debugLog("lucarda: schedulermain");
-
-
-
+    debugFile = fopen("pdvstschedulerdebug.txt", "wt");
 
     t_audiosettings as;
 
     sys_get_audio_settings(&as);
     as.a_api = API_NONE;
     sys_set_audio_settings(&as);
-
-//
     for (i = 0; i < MAXARGS; i++)
     {
         argv[i] = (char *)malloc(MAXSTRLEN * sizeof(char));
@@ -931,26 +880,14 @@ debugLog("lucarda: schedulermain");
                                                    0,
                                                    0,
                                                    sizeof(pdvstTransferData));
-    #else
+    #else //unix
     pdvstTransferMutex = sem_open(pdvstTransferMutexName, O_CREAT, 0666, 1);
-
-    if (pdvstTransferMutex == SEM_FAILED)
-		debugLog("pdvstTransferMutex failed");
-
     vstProcEvent  = sem_open(vstProcEventName, O_CREAT, 0666, 1);
-	
-	if (vstProcEvent == SEM_FAILED)
-		debugLog("vstProcEvent failed");
-		
     pdProcEvent = sem_open(pdProcEventName, O_CREAT, 0666, 0);
-    
-    if (pdProcEvent == SEM_FAILED)
-		debugLog("pdProcEvent failed");
-		
     fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);
     ftruncate(fd, sizeof(pdvstTransferData));
-    pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData), 
-                                PROT_READ | PROT_WRITE, MAP_SHARED, 
+    pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData),
+                                PROT_READ | PROT_WRITE, MAP_SHARED,
                                 fd, 0);
     close(fd);
     pdvstData = (pdvstTransferData *)pdvstTransferFileMap;
@@ -964,29 +901,19 @@ debugLog("lucarda: schedulermain");
                 pdvstData->sampleRate);
     xxReleaseMutex(pdvstTransferMutex);
     //timeBeginPeriod(1);
-    
-//debugLog("lucarda: in of scheduler in main scheduler" );    
-    
-    
+
     scheduler();
-    
-//debugLog("lucarda: out of scheduler in main scheduler" );    
 
     #ifdef _WIN32
         CloseHandle(pdvstTransferMutex);
         UnmapViewOfFile(pdvstTransferFileMap);
         CloseHandle(pdvstTransferFileMap);
     #else
-debugLog("lucarda: out of scheduler in main scheduler" ); 
         sem_close(pdvstTransferMutex);
-debugLog("lucarda: semclose" );
         sem_unlink((char *)pdvstTransferMutex);
-debugLog("lucarda: semunlink" );
         munmap(pdvstTransferFileMap, sizeof(pdvstTransferData));
-debugLog("lucarda: unmap" );
         close(fd);
     #endif
-//debugLog("lucarda: close mutexs" );
     for (i = 0; i < MAXARGS; i++)
     {
         free(argv[i]);
