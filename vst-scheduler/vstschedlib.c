@@ -937,7 +937,7 @@ debugLog("lucarda: schedulermain");
     if (pdvstTransferMutex == SEM_FAILED)
 		debugLog("pdvstTransferMutex failed");
 
-    vstProcEvent  = sem_open(vstProcEventName, O_CREAT, 0666, 0);
+    vstProcEvent  = sem_open(vstProcEventName, O_CREAT, 0666, 1);
 	
 	if (vstProcEvent == SEM_FAILED)
 		debugLog("vstProcEvent failed");

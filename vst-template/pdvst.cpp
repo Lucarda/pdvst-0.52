@@ -259,8 +259,6 @@ pdvst::~pdvst()
 {
     int i;
 
-debugLog("pdvst::~pdvst()");
-
     referenceCount--;
     pdvstData->active = 0;
     #ifdef _WIN32
@@ -580,7 +578,6 @@ void pdvst::setSyncToVst(int value)
         {
             pdvstData->syncToVst = value;
         }
-debugLog("pdvst::setSyncToVst %d", value);
         xxReleaseMutex(pdvstTransferMutex);
     }
 
@@ -589,11 +586,9 @@ debugLog("pdvst::setSyncToVst %d", value);
 void pdvst::suspend()
 {
     int i;
-debugLog("pdvst::suspend()");
-    setSyncToVst(0);
-debugLog("pdvst::suspend() 2");    
+    setSyncToVst(0);   
     xxSetEvent(vstProcEvent);
-debugLog("pdvst::suspend() 3");
+
     for (i = 0; i < audioBuffer->nChannels; i++)
     {
         memset(audioBuffer->in[i], 0, audioBuffer->size * sizeof(float));
@@ -602,13 +597,11 @@ debugLog("pdvst::suspend() 3");
     audioBuffer->inFrameCount = audioBuffer->outFrameCount = 0;
     dspActive = false;
     setInitialDelay(PDBLKSIZE * 2);
-debugLog("pdvst::suspend() 4");
 }
 
 void pdvst::resume()
 {
     int i;
-debugLog("pdvst::resume()");
     setSyncToVst(1);
     xxSetEvent(vstProcEvent);
     for (i = 0; i < audioBuffer->nChannels; i++)
@@ -963,6 +956,7 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
             // JYG }
             if (gotPdProcEvent)
                 {
+                    
                     xxResetEvent(pdProcEvent);
                     syncDefeatNumber=0;
                 }
