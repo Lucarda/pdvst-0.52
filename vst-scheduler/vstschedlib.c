@@ -150,7 +150,7 @@ void pdvst_sleep(int n)
 #ifdef _WIN32
     Sleep(n);
 #else
-    usleep(n*1000);
+    usleep(n*1000); //(n*1000)
 #endif
 }
 
@@ -817,7 +817,7 @@ int scheduler()
         {
             xxReleaseMutex(pdvstTransferMutex);
             if (xxWaitForSingleObject(vstProcEvent, 1000) == 0) //WAIT_TIMEOUT
-            {
+            {            
                 // we have probably lost sync by now (1 sec)
                 xxWaitForSingleObject(pdvstTransferMutex, 100);
                 pdvstData->syncToVst = 0;
@@ -889,7 +889,7 @@ int pd_extern_sched(char *flags)
     pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData),
                                 PROT_READ | PROT_WRITE, MAP_SHARED,
                                 fd, 0);
-    close(fd);
+    //close(fd);
     pdvstData = (pdvstTransferData *)pdvstTransferFileMap;
     #endif
     xxWaitForSingleObject(pdvstTransferMutex, -1);

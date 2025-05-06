@@ -235,7 +235,7 @@ pdvst::~pdvst()
         sem_close((sem_t*)pdvstTransferMutexName);
         sem_unlink(pdvstTransferMutexName);
         munmap(pdvstTransferFileMap, sizeof(pdvstTransferData));
-        //close(fd);
+        //::close(fd);
     #endif
     for (i = 0; i < MAXPARAMETERS; i++)
         delete vstParamName[i];
@@ -309,7 +309,7 @@ void pdvst::startPd()
     pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData),
                                 PROT_READ | PROT_WRITE, MAP_SHARED,
                                 fd, 0);
-    ::close(fd);
+    //::close(fd);
     pdvstData = (pdvstTransferData *)pdvstTransferFileMap;
 
     #endif
