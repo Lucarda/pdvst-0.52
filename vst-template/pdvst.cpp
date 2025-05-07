@@ -232,10 +232,12 @@ pdvst::~pdvst()
         UnmapViewOfFile(pdvstTransferFileMap);
         CloseHandle(pdvstTransferFileMap);
     #else
+        sem_close((sem_t*)vstProcEventName);
+        sem_close((sem_t*)pdProcEventName);
         sem_close((sem_t*)pdvstTransferMutexName);
         sem_unlink(pdvstTransferMutexName);
         munmap(pdvstTransferFileMap, sizeof(pdvstTransferData));
-        //::close(fd);
+        ::close(fd);
     #endif
     for (i = 0; i < MAXPARAMETERS; i++)
         delete vstParamName[i];
@@ -305,11 +307,19 @@ void pdvst::startPd()
     vstProcEvent = sem_open(vstProcEventName, O_CREAT, 0666, 1);  // Initial value 1 (TRUE)
     pdProcEvent = sem_open(pdProcEventName, O_CREAT, 0666, 0);
     fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);
+    if (fd == -1) {
+        debugLog("error: shm_open");
+        exit(1);
+    }
     ftruncate(fd, sizeof(pdvstTransferData));
     pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData),
                                 PROT_READ | PROT_WRITE, MAP_SHARED,
                                 fd, 0);
-    //::close(fd);
+    if (pdvstTransferFileMap == MAP_FAILED) {
+        debugLog("error: mmap");
+        exit(1);
+    }
+    ::close(fd);
     pdvstData = (pdvstTransferData *)pdvstTransferFileMap;
 
     #endif
@@ -824,7 +834,7 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
         (audioBuffer->inFrameCount)++;
         // if enough samples to process then do it
         if (audioBuffer->inFrameCount >= PDBLKSIZE)
-        {
+        {          
             audioBuffer->inFrameCount = 0;
             updatePdvstParameters();
             // wait for pd process event

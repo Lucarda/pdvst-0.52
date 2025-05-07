@@ -40,6 +40,7 @@
 #define MAXSTRLEN 1024
 #define TIMEUNITPERSEC (32.*441000.)
 
+
 #define kVstTransportChanged      1
 #define kVstTransportPlaying      2
 #define kVstTransportRecording    8
@@ -150,7 +151,7 @@ void pdvst_sleep(int n)
 #ifdef _WIN32
     Sleep(n);
 #else
-    usleep(n*1000); //(n*1000)
+    usleep(n*1000);
 #endif
 }
 
@@ -502,7 +503,7 @@ int scheduler()
 
     *(get_sys_time_per_dsp_tick()) = (TIMEUNITPERSEC) * \
                                      ((double)*(get_sys_schedblocksize())) / \
-                                     *(get_sys_dacsr());
+                                     *(get_sys_dacsr());                                                                       
     //l sys_clearhist();
     //if (*(get_sys_sleepgrain()) < 1000)   // JYG
     if (*(get_sys_sleepgrain()) < 100)
@@ -595,6 +596,7 @@ int scheduler()
                     pdvstData->hostTimeInfo.updated=1;  // keep flag as updated
                  }
             }
+
             if ((timeInfo.flags&(kVstTransportChanged|kVstTransportPlaying|kVstTransportRecording))||(timeInfo.ppqPos!=(float)pdvstData->hostTimeInfo.ppqPos))
             {
                 timeInfo.ppqPos=(float)pdvstData->hostTimeInfo.ppqPos;
@@ -786,10 +788,11 @@ int scheduler()
                     // pitch bend
                     pdvstData->midiOutQueue[i].messageType = PITCH_BEND;
                 else
-                    // something else
-                    pdvstData->midiOutQueue[i].messageType  = OTHER;
-                    _midi_outtail  = (_midi_outtail + 1 == MIDIQSIZE ? 0 : _midi_outtail + 1);
-                    i  = i + 1;
+                    {// something else
+                        pdvstData->midiOutQueue[i].messageType  = OTHER;
+                        _midi_outtail  = (_midi_outtail + 1 == MIDIQSIZE ? 0 : _midi_outtail + 1);
+                        i  = i + 1;
+                    }
                 if (i>= MAXMIDIOUTQUEUESIZE)
                     break;
             }
@@ -804,11 +807,13 @@ int scheduler()
                     pdvstData->midiOutQueueUpdated=0;
                 }
         }
+
 #endif  // VSTMIDIOUTENABLE
 
         // run at approx. real-time
         blockTime = (int)((float)(pdvstData->blockSize) / \
                           (float)pdvstData->sampleRate * 1000.0);
+
         if (blockTime < 1)
         {
             blockTime = 1;
@@ -817,7 +822,7 @@ int scheduler()
         {
             xxReleaseMutex(pdvstTransferMutex);
             if (xxWaitForSingleObject(vstProcEvent, 1000) == 0) //WAIT_TIMEOUT
-            {            
+            {
                 // we have probably lost sync by now (1 sec)
                 xxWaitForSingleObject(pdvstTransferMutex, 100);
                 pdvstData->syncToVst = 0;
@@ -832,6 +837,7 @@ int scheduler()
             xxReleaseMutex(pdvstTransferMutex);
             scheduler_tick();
             pdvst_sleep(blockTime);
+
         }
         #ifdef _WIN32
         GetExitCodeProcess(vstHostProcess, &vstHostProcessStatus);
@@ -885,7 +891,7 @@ int pd_extern_sched(char *flags)
     vstProcEvent  = sem_open(vstProcEventName, O_CREAT, 0666, 1);
     pdProcEvent = sem_open(pdProcEventName, O_CREAT, 0666, 0);
     fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);
-    ftruncate(fd, sizeof(pdvstTransferData));
+//    ftruncate(fd, sizeof(pdvstTransferData));
     pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData),
                                 PROT_READ | PROT_WRITE, MAP_SHARED,
                                 fd, 0);
@@ -913,6 +919,7 @@ int pd_extern_sched(char *flags)
         sem_unlink((char *)pdvstTransferMutex);
         munmap(pdvstTransferFileMap, sizeof(pdvstTransferData));
         close(fd);
+        shm_unlink(pdvstTransferFileMap);
     #endif
     for (i = 0; i < MAXARGS; i++)
     {

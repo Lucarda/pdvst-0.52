@@ -1,4 +1,4 @@
-#N canvas 615 316 655 416 12;
+#N canvas 579 261 655 416 12;
 #X obj 78 87 adc~, f 6;
 #X obj 73 241 loadbang;
 #X msg 73 271 \; pd dsp 1 \;;
@@ -17,9 +17,15 @@
 #X msg 277 42 set \$1;
 #X text 355 117 range is 0..1;
 #X obj 24 34 osc~ 440;
+#X msg 353 301 open inputfromplug.wav \, start;
+#X msg 373 364 stop;
+#X obj 272 376 writesf~;
+#X msg 183 163 1;
 #X connect 0 0 7 0;
+#X connect 0 0 20 0;
 #X connect 0 1 6 0;
 #X connect 1 0 2 0;
+#X connect 1 0 21 0;
 #X connect 4 0 5 0;
 #X connect 5 0 6 1;
 #X connect 5 0 7 1;
@@ -33,5 +39,6 @@
 #X connect 14 0 13 0;
 #X connect 14 0 10 0;
 #X connect 15 0 14 0;
-#X connect 17 0 7 0;
-#X connect 17 0 6 0;
+#X connect 18 0 20 0;
+#X connect 19 0 20 0;
+#X connect 21 0 14 0;

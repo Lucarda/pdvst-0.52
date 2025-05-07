@@ -61,6 +61,7 @@ linux-build:
 	g++ -Wall -I. -I$(FOO) -I$(FOO2) \
 	$(SOURCES) -D__cdecl="" -fPIC -std=c++11 -shared -ldl -lpthread -lc -lrt -o pdvst-template.so
 	strip pdvst-template.so
+	chmod 664 pdvst-template.so
 	cp pdvst-template.so ../build/Pd_Gain.so
 	#cp pdvst-template.so ../build/Pd_Gain-gui.so
 	#cp pdvst-template.so ../build/Pd_Gain-nogui.so

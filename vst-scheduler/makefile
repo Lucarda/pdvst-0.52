@@ -50,6 +50,6 @@ linux-build:
 	$(SOURCES) -fPIC -shared -lpthread -lc -lrt -o vstschedlib.pd_linux
 	#-ldl -lpthread -lc
 	#strip vstschedlib.pd_linux
-	chmod 775 vstschedlib.pd_linux
+	chmod 664 vstschedlib.pd_linux
 	cp vstschedlib.pd_linux ../build/.pd/bin/vstschedlib.pd_linux
 

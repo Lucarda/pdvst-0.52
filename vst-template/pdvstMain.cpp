@@ -86,6 +86,7 @@ VST_EXPORT AEffect *VSTPluginMain(audioMasterCallback audioMaster)
 }
 
 // support for old hosts not looking for VSTPluginMain
+
 #if (TARGET_API_MAC_CARBON && __ppc__)
 VST_EXPORT AEffect* main_macho (audioMasterCallback audioMaster) { return VSTPluginMain (audioMaster); }
 #elif WIN32
@@ -93,6 +94,7 @@ VST_EXPORT AEffect* MAIN (audioMasterCallback audioMaster) { return VSTPluginMai
 #elif BEOS
 VST_EXPORT AEffect* main_plugin (audioMasterCallback audioMaster) { return VSTPluginMain (audioMaster); }
 #endif
+
 } // extern "C"
 
 
@@ -123,6 +125,7 @@ void startup(void)
     strcpy(unixname, dl_info.dli_fname);
     parseSetupFile();
 }
+
 #endif
 } // extern "C"
 
@@ -240,7 +243,8 @@ void parseSetupFile()
             *(strstr(strlowercase(globalPluginName), DLL)) = 0;
         strcpy(globalPluginPath,vstDataPath);
     }
-    #endif
+    #endif // unix
+
     // initialize program info
     strcpy(globalProgram[0].name, "Default");
     memset(globalProgram[0].paramValue, 0, MAXPARAMS * sizeof(float));
@@ -249,6 +253,8 @@ void parseSetupFile()
     for (i = 0; i < MAXPARAMS; i++)
         strcpy(globalVstParamName[i], "<unnamed>");
     globalNPrograms = 1;
+
+
     // check existence of setup file in vst-subfolder
     if( access(vstSetupFileName, F_OK ) != -1 )
         // if exists choose this alternate file
@@ -256,12 +262,12 @@ void parseSetupFile()
         setupFile = fopen(vstSetupFileName, "r");
         //strcpy(setupFileName,vstSetupFileName);
     }
-    if (setupFile) {
 
+    if (setupFile) {
         while (fgets(line, sizeof(line), setupFile))
         {
             equalPos = strchr(line, '=') - line;
-            if (equalPos > 0 && line[0] != '#')
+            if (equalPos > 0 && equalPos < MAXSTRLEN && line[0] != '#')
             {
                 strcpy(param, line);
                 param[equalPos] = 0;
@@ -271,7 +277,6 @@ void parseSetupFile()
                 // number of channels
                 if (strcmp(param, "channels") == 0)
                     globalNChannels = atoi(value);
-
                 // main PD patch
                 if (strcmp(param, "main") == 0)
                 {
@@ -412,7 +417,6 @@ void parseSetupFile()
                 }
             }
         }
-
     }
     if (setupFile) fclose(setupFile);
 
@@ -427,4 +431,5 @@ void parseSetupFile()
     fprintf(file_pointer, "globalPureDataPath: %s\n", globalPureDataPath);
     fclose(file_pointer);
 #endif
+
 }
