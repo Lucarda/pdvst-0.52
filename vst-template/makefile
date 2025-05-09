@@ -63,7 +63,7 @@ linux-build:
 	strip pdvst-template.so
 	chmod 664 pdvst-template.so
 	cp pdvst-template.so ../build/Pd_Gain.so
-	#cp pdvst-template.so ../build/Pd_Gain-gui.so
-	#cp pdvst-template.so ../build/Pd_Gain-nogui.so
-	#cp pdvst-template.so ../build/Pd_Midi.so
-	#cp pdvst-template.so ../build/Pd_Chunks-test.so
+	cp pdvst-template.so ../build/Pd_Gain-gui.so
+	cp pdvst-template.so ../build/Pd_Gain-nogui.so
+	cp pdvst-template.so ../build/Pd_Midi.so
+	cp pdvst-template.so ../build/Pd_Chunks-test.so

@@ -503,7 +503,7 @@ int scheduler()
 
     *(get_sys_time_per_dsp_tick()) = (TIMEUNITPERSEC) * \
                                      ((double)*(get_sys_schedblocksize())) / \
-                                     *(get_sys_dacsr());                                                                       
+                                     *(get_sys_dacsr());
     //l sys_clearhist();
     //if (*(get_sys_sleepgrain()) < 1000)   // JYG
     if (*(get_sys_sleepgrain()) < 100)
@@ -895,7 +895,7 @@ int pd_extern_sched(char *flags)
     pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData),
                                 PROT_READ | PROT_WRITE, MAP_SHARED,
                                 fd, 0);
-    //close(fd);
+    close(fd);
     pdvstData = (pdvstTransferData *)pdvstTransferFileMap;
     #endif
     xxWaitForSingleObject(pdvstTransferMutex, -1);

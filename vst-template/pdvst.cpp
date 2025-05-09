@@ -834,16 +834,17 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
         (audioBuffer->inFrameCount)++;
         // if enough samples to process then do it
         if (audioBuffer->inFrameCount >= PDBLKSIZE)
-        {          
+        {
             audioBuffer->inFrameCount = 0;
             updatePdvstParameters();
-            // wait for pd process event
-            //   { JYG
+
+            #if _WIN32
             int gotPdProcEvent = (xxWaitForSingleObject(pdProcEvent, 10) == 1); //WAIT_OBJECT_0
-           // xxWaitForSingleObject(pdProcEvent,100);
-            //xxWaitForSingleObject(pdProcEvent, 10000);
-            // JYG: 10000 était une valeur trop élevée qui faisait planter ableton live
-            // JYG }
+            #else
+            sem_wait(pdProcEvent);
+            int gotPdProcEvent = 1;
+            #endif
+
             if (gotPdProcEvent)
                 {
                     xxResetEvent(pdProcEvent);
@@ -883,6 +884,7 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
             xxSetEvent(vstProcEvent);
         }
     }
+
     // output pd processed samples
     for (i = 0; i < sampleFrames; i++)
     {
@@ -998,6 +1000,7 @@ VstInt32 pdvst::processEvents(VstEvents* ev)
 void pdvst::updatePdvstParameters()
 {
     int i;
+
     xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
         for (i = 0; i < pdvstData->nParameters; i++)
