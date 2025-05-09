@@ -790,9 +790,10 @@ int scheduler()
                 else
                     {// something else
                         pdvstData->midiOutQueue[i].messageType  = OTHER;
-                        _midi_outtail  = (_midi_outtail + 1 == MIDIQSIZE ? 0 : _midi_outtail + 1);
-                        i  = i + 1;
+
                     }
+				_midi_outtail  = (_midi_outtail + 1 == MIDIQSIZE ? 0 : _midi_outtail + 1);
+				i  = i + 1;
                 if (i>= MAXMIDIOUTQUEUESIZE)
                     break;
             }
