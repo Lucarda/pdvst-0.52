@@ -225,7 +225,10 @@ pdvst::~pdvst()
 {
     int i;
     referenceCount--;
+    xxWaitForSingleObject(pdvstTransferMutex, -1);
     pdvstData->active = 0;
+    xxReleaseMutex(pdvstTransferMutex);
+    
     #ifdef _WIN32
         CloseHandle(pdvstTransferMutex);
         UnmapViewOfFile(pdvstTransferFileMap);
@@ -269,7 +272,7 @@ void pdvst::startPd()
          debugString[MAXSTRLEN],
          pathToCheck[MAXSTRLEN],
          schedulerPath[MAXSTRLEN];
-    char *unixlastargs = "2>&1 &";
+    char *unixlastargs = "2>/dev/null &";
 
     #if _WIN32 //Windows
 
