@@ -796,8 +796,8 @@ int scheduler()
                         pdvstData->midiOutQueue[i].messageType  = OTHER;
 
                     }
-				_midi_outtail  = (_midi_outtail + 1 == MIDIQSIZE ? 0 : _midi_outtail + 1);
-				i  = i + 1;
+                _midi_outtail  = (_midi_outtail + 1 == MIDIQSIZE ? 0 : _midi_outtail + 1);
+                i  = i + 1;
                 if (i>= MAXMIDIOUTQUEUESIZE)
                     break;
             }
@@ -813,7 +813,7 @@ int scheduler()
                 }
         }
 */        
-        
+#if 0      
         if(midi_outhead != lastmidiouthead)
         {
             int k = 0;
@@ -848,15 +848,28 @@ int scheduler()
             {
                 pdvstData->midiOutQueueSize=0;
                 pdvstData->midiOutQueueUpdated=0;
+            }      
+       
+#endif
+            int i=pdvstData->midiOutQueueSize; 
+            while (midi_outhead != lastmidiouthead)
+            {
+                pdvstData->midiOutQueue[i].statusByte = midi_outqueue[lastmidiouthead].q_byte1;
+                pdvstData->midiOutQueue[i].dataByte1=  midi_outqueue[lastmidiouthead].q_byte2;
+                pdvstData->midiOutQueue[i].dataByte2= midi_outqueue[lastmidiouthead].q_byte3;
+                lastmidiouthead  = (lastmidiouthead + 1 == MIDIQSIZE ? 0 : lastmidiouthead + 1);
+                i  = i + 1;
             }
-            /*
-            post("midi_outhead %d", midi_outhead);
-            post("q_byte1 %d", midi_outqueue[midi_outhead].q_byte1);
-            //post("midi_outhead -1 %d", midi_outhead - 1);
-            //post("q_byte1 -1 %d", midi_outqueue[midi_outhead - 1].q_byte1);
-*/
-
-        }
+            if (i>0)
+            {
+                pdvstData->midiOutQueueSize=i;
+                pdvstData->midiOutQueueUpdated=1;
+            }
+            else
+            {
+                pdvstData->midiOutQueueSize=0;
+                pdvstData->midiOutQueueUpdated=0;
+            }
 
 #endif  // VSTMIDIOUTENABLE
 
