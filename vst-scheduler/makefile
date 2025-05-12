@@ -34,22 +34,20 @@ ifneq ($(filter mingw% cygwin%, $(target.triplet)),)
     all: win-build
 endif
 
+optimization.flags = -O3 -ffast-math -funroll-loops -fomit-frame-pointer
 
 
 win-build:
 	@echo $(arch)
-	gcc -Wall -I$(PDDIR)/src -I../vst-template $(SOURCES) -static-libgcc \
+	gcc -Wall ${optimization.flags} -I$(PDDIR)/src -I../vst-template $(SOURCES) -static-libgcc \
     -shared -L$(PDDIR)/bin -l:pd.dll -o vstschedlib.dll
 	strip vstschedlib.dll
-	#cp vstschedlib.dll ../build/pd-scheduler$(arch)/vstschedlib.dll
 	cp vstschedlib.dll ../build/.pd/bin/vstschedlib.dll
-	#cp vstschedlib.dll ../build/Release$(arch)/vstschedlib.dll
 	
 linux-build:
-	gcc -g -Wall -I$(PDDIR)/src -I../vst-template -I. \
+	gcc -g -Wall ${optimization.flags} -I$(PDDIR)/src -I../vst-template -I. \
 	$(SOURCES) -fPIC -shared -lpthread -lc -lrt -o vstschedlib.pd_linux
-	#-ldl -lpthread -lc
-	#strip vstschedlib.pd_linux
+	strip vstschedlib.pd_linux
 	chmod 664 vstschedlib.pd_linux
 	cp vstschedlib.pd_linux ../build/.pd/bin/vstschedlib.pd_linux
 

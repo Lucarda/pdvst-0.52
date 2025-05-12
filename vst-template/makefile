@@ -45,9 +45,10 @@ ifneq ($(filter mingw% cygwin%, $(target.triplet)),)
     all: win-build
 endif
 
+optimization.flags = -O3 -ffast-math -funroll-loops -fomit-frame-pointer
 
 win-build:
-	g++ -Wall -I. -I$(FOO) -I$(FOO2) \
+	g++ -Wall ${optimization.flags} -I. -I$(FOO) -I$(FOO2) \
 	$(SOURCES) -static-libgcc -static-libstdc++ -static -lpthread -shared -o pdvst-template.dll
 	strip pdvst-template.dll
 	cp pdvst-template.dll ../build/pdvst-template.dll
@@ -58,7 +59,7 @@ win-build:
 	cp pdvst-template.dll ../build/Pd_Chunks-test.dll
 
 linux-build:
-	g++ -Wall -I. -I$(FOO) -I$(FOO2) \
+	g++ -Wall ${optimization.flags} -I. -I$(FOO) -I$(FOO2) \
 	$(SOURCES) -D__cdecl="" -fPIC -std=c++11 -shared -ldl -lpthread -lc -lrt -o pdvst-template.so
 	strip pdvst-template.so
 	chmod 664 pdvst-template.so
