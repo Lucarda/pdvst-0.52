@@ -888,18 +888,17 @@ VstInt32 pdvst::processEvents(VstEvents* ev)
     //if (xxWaitForSingleObject(pdvstTransferMutex, 10)==WAIT_OBJECT_0)
     xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
+
         if (pdvstData->midiOutQueueUpdated)
         {
-            // Faire une loop pour parcourir la midiqueue et recopier
-            //dans la structure midiOutEvents
             int midiOutQueueSize=pdvstData->midiOutQueueSize;
-            for (int ka=0;ka<midiOutQueueSize;ka++)
+            for (int ka = 0;ka < midiOutQueueSize; ka++)
             {
                 midiEvnts[ka].midiData[0] =  pdvstData->midiOutQueue[ka].statusByte;
                 midiEvnts[ka].midiData[1] = pdvstData->midiOutQueue[ka].dataByte1;
                 midiEvnts[ka].midiData[2] = pdvstData->midiOutQueue[ka].dataByte2;
             }
-            evnts->numEvents=midiOutQueueSize;
+            evnts->numEvents = pdvstData->midiOutQueueSize;
             sendVstEventsToHost(evnts);  // rajouter un test de réussite
             pdvstData->midiOutQueueUpdated=0;
             pdvstData->midiOutQueueSize=0;
@@ -907,6 +906,7 @@ VstInt32 pdvst::processEvents(VstEvents* ev)
         }
         else
         {
+            /*
             // Envoyer périodiquement un sendVstEventsToHost(no_event) pour signifier
             // à Ableton Live qu'on est bien vivant et qu'on envoie du midi
             // (tous les 120 tours de buffer)
@@ -920,8 +920,19 @@ VstInt32 pdvst::processEvents(VstEvents* ev)
                 evnts->numEvents=1;
                 sendVstEventsToHost(evnts);
             }
+            */
         }
-
+       
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         for (long i = 0; i < ev->numEvents; i++)
         {
             if ((ev->events[i])->type != kVstMidiType)

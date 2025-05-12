@@ -36,6 +36,7 @@
 #include "s_stuff.h"
 #include "pdvstTransfer.h"
 #include <string.h>
+#include <math.h>
 #define MAXARGS 1024
 #define MAXSTRLEN 1024
 #define TIMEUNITPERSEC (32.*441000.)
@@ -49,7 +50,9 @@ FILE *debugFile;
 
 #ifdef VSTMIDIOUTENABLE
     EXTERN int midi_outhead;
-    int _midi_outtail=0;   // _midi_outtail defined locally
+    int lastmidiouthead=0;
+    int j;
+
     typedef struct _midiqelem
     {
         double q_time;
@@ -741,6 +744,7 @@ int scheduler()
 
         // flush vstmidi out messages here
 #ifdef VSTMIDIOUTENABLE
+/*
         if (msw_nmidiout==0)
         {
             int i=pdvstData->midiOutQueueSize;    // si la midiOutQueue n'a pas été vidée, rajouter des éléments à la fin de celle-ci
@@ -807,6 +811,51 @@ int scheduler()
                     pdvstData->midiOutQueueSize=0;
                     pdvstData->midiOutQueueUpdated=0;
                 }
+        }
+*/        
+        
+        if(midi_outhead != lastmidiouthead)
+        {
+            int k = 0;
+            j = lastmidiouthead;
+            //pdvstData->midiOutQueueSize = 0;
+            for (k; j != midi_outhead; k++)
+            {
+                
+                if (j + 1 >= MIDIQSIZE ) 
+                    j = 0;
+                else j += 1;
+            }
+            
+            pdvstData->midiOutQueueSize = k;
+            int v = lastmidiouthead;
+            for (int g = 0; g < pdvstData->midiOutQueueSize; g++)
+            {                               
+                pdvstData->midiOutQueue[g].statusByte = midi_outqueue[v].q_byte1; 
+                pdvstData->midiOutQueue[g].dataByte1 = midi_outqueue[v].q_byte2; 
+                pdvstData->midiOutQueue[g].dataByte2 =  midi_outqueue[v].q_byte3;
+                if (v + 1 >= MIDIQSIZE)
+                    v = 0;
+                else
+                    v =+ 1;
+            }            
+            lastmidiouthead = midi_outhead;
+            if (pdvstData->midiOutQueueSize)
+            {
+                pdvstData->midiOutQueueUpdated=1;
+            }
+            else
+            {
+                pdvstData->midiOutQueueSize=0;
+                pdvstData->midiOutQueueUpdated=0;
+            }
+            /*
+            post("midi_outhead %d", midi_outhead);
+            post("q_byte1 %d", midi_outqueue[midi_outhead].q_byte1);
+            //post("midi_outhead -1 %d", midi_outhead - 1);
+            //post("q_byte1 -1 %d", midi_outqueue[midi_outhead - 1].q_byte1);
+*/
+
         }
 
 #endif  // VSTMIDIOUTENABLE
