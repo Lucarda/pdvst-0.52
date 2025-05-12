@@ -51,7 +51,6 @@ FILE *debugFile;
 #ifdef VSTMIDIOUTENABLE
     EXTERN int midi_outhead;
     int lastmidiouthead=0;
-    int j;
 
     typedef struct _midiqelem
     {
@@ -68,9 +67,6 @@ FILE *debugFile;
     #endif /*MIDIQSIZE  */
 
     EXTERN t_midiqelem midi_outqueue[MIDIQSIZE];
-    //EXTERN int msw_nmidiout;
-    int msw_nmidiout=0;
-
 #endif // VSTMIDIOUTENABLE
 
 #if _WIN32
@@ -316,6 +312,7 @@ int setPdvstChunk(const char *amsg)
             nodice:
             msg = emsg + 1;
         }
+
         binbuf_free(bbuf);
         return 1;
     }
@@ -444,18 +441,10 @@ void send_dacs(void)
 
 void scheduler_tick( void)
 {
-//l sys_addhist(0);
     send_dacs();
-//l sys_setmiditimediff(0, 1e-6 * *(get_sys_schedadvance()));
-//l sys_addhist(1);
-    /// {  JYG
-    //sched_tick(*(get_sys_time()) + *(get_sys_time_per_dsp_tick()));
     sched_tick();
-    ///  JYG }
-//l sys_addhist(2);
     sys_pollmidiqueue();
     sys_pollgui();
-//l sys_addhist(3);
 }
 /*
 int HFClock()
@@ -507,8 +496,7 @@ int scheduler()
     *(get_sys_time_per_dsp_tick()) = (TIMEUNITPERSEC) * \
                                      ((double)*(get_sys_schedblocksize())) / \
                                      *(get_sys_dacsr());
-    //l sys_clearhist();
-    //if (*(get_sys_sleepgrain()) < 1000)   // JYG
+
     if (*(get_sys_sleepgrain()) < 100)
     {
         *(get_sys_sleepgrain()) = *(get_sys_schedadvance()) / 4;
@@ -848,7 +836,6 @@ int pd_extern_sched(char *flags)
     vstProcEvent  = sem_open(vstProcEventName, O_CREAT, 0666, 1);
     pdProcEvent = sem_open(pdProcEventName, O_CREAT, 0666, 0);
     fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);
-//    ftruncate(fd, sizeof(pdvstTransferData));
     pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData),
                                 PROT_READ | PROT_WRITE, MAP_SHARED,
                                 fd, 0);
@@ -856,8 +843,6 @@ int pd_extern_sched(char *flags)
     pdvstData = (pdvstTransferData *)pdvstTransferFileMap;
     #endif
     xxWaitForSingleObject(pdvstTransferMutex, -1);
-//l *(get_sys_schedadvance()) = *(get_sys_main_advance()) * 1000;
-//l post("Hello, appel sys_setchsr dans _main. Version 64");
     post("Hello, pdvst2");
     sys_setchsr(pdvstData->nChannels,
                 pdvstData->nChannels,
@@ -884,10 +869,3 @@ int pd_extern_sched(char *flags)
     }
     return (0);
 }
-
-
-
-
-
-
-

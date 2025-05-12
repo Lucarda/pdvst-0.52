@@ -177,8 +177,7 @@ pdvst::pdvst(audioMasterCallback audioMaster)
     #if _Win32
     if (customGui)
     {
-       editor = new pdvstEditor(this);
-
+		editor = new pdvstEditor(this);
         debugLog("   -has custom GUI-");
     }
     guiNameUpdated=false;
@@ -206,7 +205,7 @@ pdvst::pdvst(audioMasterCallback audioMaster)
         evnts->events[k] = (VstEvent*)&midiEvnts[k];
     }
      #endif //VSTMIDIOUTENABLE
-        //timeBeginPeriod(1);
+	//timeBeginPeriod(1);
     debugLog("startingPd...");
     // start pd.exe
     startPd();
@@ -307,18 +306,10 @@ void pdvst::startPd()
     vstProcEvent = sem_open(vstProcEventName, O_CREAT, 0666, 1);  // Initial value 1 (TRUE)
     pdProcEvent = sem_open(pdProcEventName, O_CREAT, 0666, 0);
     fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);
-    if (fd == -1) {
-        debugLog("error: shm_open");
-        exit(1);
-    }
     ftruncate(fd, sizeof(pdvstTransferData));
     pdvstTransferFileMap = (char*)mmap(NULL, sizeof(pdvstTransferData),
                                 PROT_READ | PROT_WRITE, MAP_SHARED,
                                 fd, 0);
-    if (pdvstTransferFileMap == MAP_FAILED) {
-        debugLog("error: mmap");
-        exit(1);
-    }
     ::close(fd);
     pdvstData = (pdvstTransferData *)pdvstTransferFileMap;
 
@@ -548,6 +539,7 @@ void pdvst::sendProgChange(VstInt32 prgm)
 
 void pdvst::setProgram(VstInt32 prgmNum)
 {
+
    debugLog("appel de setProgram %d", prgmNum);
    int i;
     if (prgmNum >= 0 && prgmNum < nPrograms)
@@ -569,7 +561,6 @@ void pdvst::setProgram(VstInt32 prgmNum)
                for (i = 0; i < nParameters; i++)
                 {
                     setParameter(i, program[curProgram].paramValue[i]);
-                  //  MessageBox(NULL,"setvalue","setProgram",MB_OK);
                 }
             }
             #else
@@ -579,6 +570,7 @@ void pdvst::setProgram(VstInt32 prgmNum)
                 }
             #endif
    }
+
 }
 
 VstInt32 pdvst::getProgram()
@@ -733,12 +725,9 @@ DWORD WINAPI NotifySyncError(LPVOID lpParam) {
 
 void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrames)
 {
-
-
     //if (xxWaitForSingleObject(pdvstTransferMutex, 10)==WAIT_OBJECT_0)
     xxWaitForSingleObject(pdvstTransferMutex, 10);
     {
-
         if (pdvstData->midiOutQueueUpdated)
         {
             int midiOutQueueSize=pdvstData->midiOutQueueSize;
@@ -756,7 +745,6 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
         }
         else
         {
-
             // Envoyer périodiquement un sendVstEventsToHost(no_event) pour signifier
             // à Ableton Live qu'on est bien vivant et qu'on envoie du midi
             // (tous les 120 tours de buffer)
@@ -770,11 +758,9 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
                 evnts->numEvents=1;
                 sendVstEventsToHost(evnts);
             }
-
         }
         xxReleaseMutex(pdvstTransferMutex);
     }
-
 
        // Get play head information
       VstTimeInfo * infos = getTimeInfo(
@@ -872,7 +858,6 @@ void pdvst::processReplacing(float **input, float **output, VstInt32 sampleFrame
                     // get pd processed samples
                     if (gotPdProcEvent)
                     {
-                    // get pd processed samples
                         audioBuffer->out[l][audioBuffer->outFrameCount] = pdvstData->samples[l][k];
                         // put new samples in for processing
                         pdvstData->samples[l][k] = audioBuffer->in[l][k];
@@ -1011,11 +996,8 @@ void pdvst::updatePdvstParameters()
             {
                 if (pdvstData->vstParameters[i].type == FLOAT_TYPE)
                 {
-                    //beginEdit (i);
                     setParameterAutomated(i,
                                           pdvstData->vstParameters[i].value.floatData);
-                    //endEdit(i);
-                    //l updateDisplay ();  // I have commented this because it breaks sliders, numbox, etc. If this is on it jumps to max when first clicking on sliders, etc.
                 }
                 pdvstData->vstParameters[i].updated = 0;
             }
