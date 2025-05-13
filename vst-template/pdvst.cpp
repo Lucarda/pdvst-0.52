@@ -133,7 +133,8 @@ pdvst::pdvst(audioMasterCallback audioMaster)
     setNumInputs(nChannels);
     setNumOutputs(nChannels);
     setUniqueID(pluginId);
-    setInitialDelay(PDBLKSIZE * 2);
+    //setInitialDelay(PDBLKSIZE * 2);
+    setInitialDelay(0);
     canProcessReplacing();
     if (isASynth)
     {
@@ -501,7 +502,8 @@ void pdvst::suspend()
     }
     audioBuffer->inFrameCount = audioBuffer->outFrameCount = 0;
     dspActive = false;
-    setInitialDelay(PDBLKSIZE * 2);
+    //setInitialDelay(PDBLKSIZE * 2);
+    setInitialDelay(0);
 }
 
 void pdvst::resume()
@@ -516,7 +518,8 @@ void pdvst::resume()
     }
     audioBuffer->inFrameCount = audioBuffer->outFrameCount = 0;
     dspActive = true;
-    setInitialDelay(PDBLKSIZE * 2);
+    //setInitialDelay(PDBLKSIZE * 2);
+    setInitialDelay(0);
     if (isASynth)
     {
         //wantEvents();  deprecated since VST 2.4
