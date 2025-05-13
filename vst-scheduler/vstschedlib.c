@@ -439,12 +439,36 @@ void send_dacs(void)
     }
 }
 
+#if PD_WATCHDOG
+void glob_watchdog(void *dummy);
+
+static void pollwatchdog( void)
+{
+    static int sched_diddsp, sched_nextpingtime;
+    sched_diddsp++;
+    if (!sys_havegui() && sys_hipriority &&
+        (sched_diddsp - sched_nextpingtime > 0))
+    {
+        glob_watchdog(0);
+            /* ping every 2 seconds */
+        sched_nextpingtime = sched_diddsp +
+            2 * (int)(STUFF->st_dacsr /(double)STUFF->st_schedblocksize);
+    }
+}
+#else /* ! PD_WATCHDOG */
+static void pollwatchdog( void)
+{
+    /* dummy */
+}
+#endif /* PD_WATCHDOG */
+
 void scheduler_tick( void)
 {
     send_dacs();
     sched_tick();
     sys_pollmidiqueue();
     sys_pollgui();
+    pollwatchdog();
 }
 /*
 int HFClock()

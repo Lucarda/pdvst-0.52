@@ -45,7 +45,7 @@ win-build:
 	cp vstschedlib.dll ../build/.pd/bin/vstschedlib.dll
 	
 linux-build:
-	gcc -g -Wall ${optimization.flags} -I$(PDDIR)/src -I../vst-template -I. \
+	gcc -DPD_WATCHDOG=1 -Wall ${optimization.flags} -I$(PDDIR)/src -I../vst-template -I. \
 	$(SOURCES) -fPIC -shared -lpthread -lc -lrt -o vstschedlib.pd_linux
 	strip vstschedlib.pd_linux
 	chmod 664 vstschedlib.pd_linux

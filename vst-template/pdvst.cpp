@@ -567,10 +567,12 @@ void pdvst::setProgram(VstInt32 prgmNum)
                 }
             }
             #else
+
             for (i = 0; i < nParameters; i++)
                 {
                     setParameter(i, program[curProgram].paramValue[i]);
                 }
+
             #endif
    }
 
