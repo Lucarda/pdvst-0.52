@@ -8,6 +8,7 @@ vstsdk2.4
 
 *.dll
 *.so
+*.pd_linux
 
 # files
 

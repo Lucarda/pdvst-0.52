@@ -40,14 +40,14 @@ optimization.flags = -O3 -ffast-math -funroll-loops -fomit-frame-pointer
 win-build:
 	@echo $(arch)
 	gcc -Wall ${optimization.flags} -I$(PDDIR)/src -I../vst-template $(SOURCES) -static-libgcc \
-    -shared -L$(PDDIR)/bin -l:pd.dll -o vstschedlib.dll
-	strip vstschedlib.dll
-	cp vstschedlib.dll ../build/.pd/bin/vstschedlib.dll
+    -shared -L$(PDDIR)/bin -l:pd.dll -o vst2schedlib.dll
+	strip vst2schedlib.dll
+	cp vst2schedlib.dll ../build/vst2schedlib.dll
 	
 linux-build:
 	gcc -DPD_WATCHDOG=1 -Wall ${optimization.flags} -I$(PDDIR)/src -I../vst-template -I. \
-	$(SOURCES) -fPIC -shared -lpthread -lc -lrt -o vstschedlib.pd_linux
-	strip vstschedlib.pd_linux
-	chmod 664 vstschedlib.pd_linux
-	cp vstschedlib.pd_linux ../build/.pd/bin/vstschedlib.pd_linux
+	$(SOURCES) -fPIC -shared -lpthread -lc -lrt -o vst2schedlib.pd_linux
+	strip vst2schedlib.pd_linux
+	chmod 664 vst2schedlib.pd_linux
+	cp vst2schedlib.pd_linux ../build/vst2schedlib.pd_linux
 

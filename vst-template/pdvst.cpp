@@ -56,6 +56,7 @@ extern char globalPluginName[MAXSTRLEN];
 extern char globalPdFile[MAXFILENAMELEN];
 extern char globalPureDataPath[MAXFILENAMELEN];
 extern char globalHostPdvstPath[MAXFILENAMELEN];
+extern char globalSchedulerPath[MAXFILENAMELEN];
 extern bool globalCustomGui;
 extern int globalCustomGuiWidth;
 extern int globalCustomGuiHeight;
@@ -270,9 +271,7 @@ void pdvst::debugLog(char *fmt, ...)
 void pdvst::startPd()
 {
     char commandLineArgs[MAXSTRLEN],
-         debugString[MAXSTRLEN],
-         pathToCheck[MAXSTRLEN],
-         schedulerPath[MAXSTRLEN];
+         debugString[MAXSTRLEN];
     char *unixlastargs = "2>/dev/null &";
 
     #if _WIN32 //Windows
@@ -351,9 +350,12 @@ void pdvst::startPd()
         sprintf(commandLineArgs, "%s..\\.pd\\bin\\pd.exe", globalPluginPath);
         if( access( commandLineArgs, F_OK ) != -1 )
             break;
+        else
+        {
         sprintf(errorMessage,"pd program not found. Check your settings in \n%s%s.pdv \n setup file. (search for the line PDPATH)",
                               globalPluginPath,globalPluginName);
             break;
+		}
     }
     #else // linux
 
@@ -362,19 +364,20 @@ void pdvst::startPd()
         sprintf(commandLineArgs, "%s/bin/pd", globalPureDataPath);
         if( access( commandLineArgs, F_OK ) != -1 )
         {
-            sprintf(schedulerPath, "%s/bin", globalPureDataPath);
             break;
         }
 
         sprintf(commandLineArgs, "%s../.pd/bin/pd", globalPluginPath);
         if( access( commandLineArgs, F_OK ) != -1 )
         {
-            sprintf(schedulerPath, "%s../.pd/bin", globalPluginPath);
             break;
         }
+        else
+        {
         sprintf(errorMessage,"pd program not found. Check your settings in \n%s%s.pdv \n setup file. (search for the line PDPATH)",
                               globalPluginPath,globalPluginName);
             break;
+		}
     }
     #endif
 
@@ -384,12 +387,12 @@ void pdvst::startPd()
             debugString);
     #if _WIN32
     sprintf(commandLineArgs,
-            "%s -schedlib vstschedlib",
-            commandLineArgs);
+            "%s -schedlib \"%svst2schedlib\"",
+            commandLineArgs, globalSchedulerPath);
     #else
         sprintf(commandLineArgs,
-            "%s -schedlib %s/vstschedlib",
-            commandLineArgs, schedulerPath);
+            "%s -schedlib \"%svst2schedlib\"",
+            commandLineArgs, globalSchedulerPath);
     #endif
     sprintf(commandLineArgs,
             "%s -extraflags \"-vstproceventname %s -pdproceventname %s -vsthostid %d -mutexname %s -filemapname %s\"",

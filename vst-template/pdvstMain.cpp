@@ -46,6 +46,7 @@ char globalPluginName[MAXSTRLEN];
 char globalPdFile[MAXFILENAMELEN];
 char globalPureDataPath[MAXFILENAMELEN];
 char globalHostPdvstPath[MAXFILENAMELEN];
+char globalSchedulerPath[MAXFILENAMELEN];
 bool globalCustomGui = false;
 int globalCustomGuiWidth= 320;
 int globalCustomGuiHeight= 150;
@@ -193,6 +194,7 @@ void parseSetupFile()
 
         strcpy(vstDataPath, tFileName);
         *(strrchr(vstDataPath, '\\') + 1) = 0;
+        sprintf(globalSchedulerPath, "%s", vstDataPath);
         sprintf(vstDataPath, "%s%s\\", vstDataPath,globalPluginName);
          // remove .dll extension (from globalPluginName)
         if (strstr(vstDataPath, DLL))
@@ -226,6 +228,7 @@ void parseSetupFile()
     {
         strcpy(vstDataPath, unixname);
         *(strrchr(vstDataPath, '/') + 1) = 0;
+        sprintf(globalSchedulerPath, "%s", vstDataPath);
         sprintf(vstDataPath, "%s%s/", vstDataPath,globalPluginName);
          // remove .dll extension (from globalPluginName)
         if (strstr(vstDataPath, DLL))
@@ -429,6 +432,7 @@ void parseSetupFile()
     fprintf(file_pointer, "vstSetupFileName: %s\n", vstSetupFileName);
     fprintf(file_pointer, "globalPluginPath: %s\n", globalPluginPath);
     fprintf(file_pointer, "globalPureDataPath: %s\n", globalPureDataPath);
+    fprintf(file_pointer, "globalSchedulerPath: %s\n", globalSchedulerPath);
     fclose(file_pointer);
 #endif
 
