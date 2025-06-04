@@ -305,7 +305,7 @@ void pdvst::startPd()
     sprintf(pdvstTransferFileMapName, "/filemap%d%x", getpid(), this);
     sprintf(vstProcEventName, "/vstprocevent%d%x", getpid(), this);
     sprintf(pdProcEventName, "/pdprocevent%d%x", getpid(), this);
-    pdvstTransferMutex = sem_open(pdvstTransferMutexName, O_CREAT, 0666, 0);
+    pdvstTransferMutex = sem_open(pdvstTransferMutexName, O_CREAT, 0666, 1);
     vstProcEvent = sem_open(vstProcEventName, O_CREAT, 0666, 1);  // Initial value 1 (TRUE)
     pdProcEvent = sem_open(pdProcEventName, O_CREAT, 0666, 0);
     fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);

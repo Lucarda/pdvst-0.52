@@ -5,6 +5,7 @@
 #else
 #include <time.h>
 #include <semaphore.h>
+#include <unistd.h>
 #endif
 
 
@@ -29,17 +30,20 @@ int xxWaitForSingleObject(HANDLE mutex, int ms)
 int xxWaitForSingleObject(sem_t *mutex, int ms)
 {
     if (ms == -1) ms = 30000;
-    //http://www.csc.villanova.edu/~mdamian/threads/posixsem.html
-
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-    ts.tv_sec += ms / 1000;          // Seconds
-    ts.tv_nsec += (ms % 1000) * 1e6; // Nanoseconds
-
-    int res = sem_timedwait(mutex, &ts);
-
-    if (res == 0)  return 1;
-    else return 0;
+    float elapsed_time = 0;
+    double wait_time = 10; // Wait time between attempts in microseconds
+    int ret= -1;
+	while (1) 
+	{
+		if (sem_trywait(mutex) == 0)
+			return 1;
+        if (elapsed_time >= ms) {
+            // Timeout has been reached
+            return 0; // Indicate timeout
+        }
+        usleep(wait_time);
+        elapsed_time += (wait_time / 1000);
+	}
 }
 #endif
 

@@ -790,6 +790,7 @@ int scheduler()
         if (pdvstData->syncToVst)
         {
             xxReleaseMutex(pdvstTransferMutex);
+            
             if (xxWaitForSingleObject(vstProcEvent, 1000) == 0) //WAIT_TIMEOUT
             {
                 // we have probably lost sync by now (1 sec)
@@ -797,6 +798,7 @@ int scheduler()
                 pdvstData->syncToVst = 0;
                 xxReleaseMutex(pdvstTransferMutex);
             }
+            
             xxResetEvent(vstProcEvent);
             scheduler_tick();
             xxSetEvent(pdProcEvent);
@@ -856,7 +858,7 @@ int pd_extern_sched(char *flags)
                                                    0,
                                                    sizeof(pdvstTransferData));
     #else //unix
-    pdvstTransferMutex = sem_open(pdvstTransferMutexName, O_CREAT, 0666, 1);
+    pdvstTransferMutex = sem_open(pdvstTransferMutexName, O_CREAT, 0666, 0);
     vstProcEvent  = sem_open(vstProcEventName, O_CREAT, 0666, 1);
     pdProcEvent = sem_open(pdProcEventName, O_CREAT, 0666, 0);
     fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);
