@@ -858,7 +858,7 @@ int pd_extern_sched(char *flags)
                                                    0,
                                                    sizeof(pdvstTransferData));
     #else //unix
-    pdvstTransferMutex = sem_open(pdvstTransferMutexName, O_CREAT, 0666, 0);
+    pdvstTransferMutex = sem_open(pdvstTransferMutexName, O_CREAT, 0666, 1);
     vstProcEvent  = sem_open(vstProcEventName, O_CREAT, 0666, 1);
     pdProcEvent = sem_open(pdProcEventName, O_CREAT, 0666, 0);
     fd = shm_open(pdvstTransferFileMapName, O_CREAT | O_RDWR, 0666);
